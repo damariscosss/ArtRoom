@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArtRoom — Create</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="state.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--green:#1A7A3C;--nav-h:56px;--bar-h:50px}
+body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);background:#fff;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-back{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;color:var(--black);transition:opacity .2s}
+.nav-back:hover{opacity:.45}
+.nav-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--black);cursor:pointer;text-align:center;display:block}
+.nav-right{display:flex;justify-content:flex-end;align-items:flex-end}
+.sign-wrap{display:flex;flex-direction:column;align-items:center}
+.sign-chain{display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:5px}
+.chain-link{width:7px;height:4px;border:1.5px solid #ccc;border-radius:50%}
+.chain-link:nth-child(odd){transform:rotate(90deg)}
+.sign-board{display:block;text-align:center;padding:8px 18px 10px;border:1.5px solid var(--black);border-radius:7px;background:#fff;cursor:pointer;transform-origin:top center;animation:signRock 3.8s ease-in-out infinite;user-select:none;min-width:118px;position:relative}
+.sign-board::before{content:'';position:absolute;top:-2px;left:14px;right:14px;height:5px;background:#fff;z-index:1}
+.sign-text{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--black);display:block;line-height:1}
+.sign-sub{font-family:'DM Sans',sans-serif;font-size:8px;font-weight:300;letter-spacing:.13em;text-transform:uppercase;color:#bbb;display:block;margin-top:4px;line-height:1}
+.sign-dots{display:flex;justify-content:center;gap:4px;margin-top:7px}
+.sign-dot{width:4px;height:4px;border-radius:50%;background:var(--black)}
+@keyframes signRock{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.page{padding-top:var(--nav-h);padding-bottom:var(--bar-h);display:grid;grid-template-columns:1fr 420px;min-height:calc(100vh - var(--nav-h) - var(--bar-h));align-items:start}
+@media(max-width:900px){.page{grid-template-columns:1fr}}
+.left-panel{padding:48px 40px;border-right:1px solid var(--border);min-height:calc(100vh - var(--nav-h) - var(--bar-h))}
+.right-panel{padding:48px 36px;position:sticky;top:var(--nav-h)}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(28px,3.5vw,44px);font-weight:800;letter-spacing:-.03em;margin-bottom:8px}
+.page-sub{font-size:14px;font-weight:300;color:var(--gray);line-height:1.7;margin-bottom:36px;max-width:480px}
+/* Step tabs */
+.steps{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:36px}
+.step{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:10px 20px 10px 0;color:#ccc;cursor:pointer;position:relative;transition:color .2s;display:flex;align-items:center;gap:8px}
+.step.active{color:var(--black)}
+.step.active::after{content:'';position:absolute;bottom:-1px;left:0;width:100%;height:2px;background:var(--black)}
+.step.done{color:var(--green)}
+.step-num{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
+.step.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+/* Sections */
+.section{display:none}
+.section.active{display:block}
+/* Drop zone */
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:64px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:24px;position:relative}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--black);background:#fafafa}
+.dz-icon{font-size:36px;margin-bottom:16px}
+.dz-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
+.dz-sub{font-size:13px;color:var(--gray);margin-bottom:18px}
+.dz-types{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.dz-type{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;padding:4px 12px;border-radius:100px;border:1px solid var(--border);color:var(--gray)}
+.file-hidden{display:none}
+/* Uploaded preview */
+.uploaded-files{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.uf-item{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px solid var(--border);border-radius:8px;background:#fafafa}
+.uf-thumb{width:44px;height:44px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.uf-info{flex:1}
+.uf-name{font-size:13px;font-weight:400;margin-bottom:2px}
+.uf-size{font-size:11px;color:var(--gray)}
+.uf-remove{background:none;border:none;cursor:pointer;color:#bbb;font-size:16px;transition:color .15s;padding:0 4px}
+.uf-remove:hover{color:#E8001A}
+/* Form fields */
+.field{margin-bottom:22px}
+.label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);margin-bottom:7px;display:block}
+.inp{width:100%;border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:var(--black);outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
+.inp:focus{border-color:var(--black);box-shadow:0 0 0 3px rgba(10,10,10,.06)}
+textarea.inp{resize:vertical;min-height:100px;line-height:1.65}
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* Category pills */
+.cat-row{display:flex;gap:8px;flex-wrap:wrap}
+.cat-pill{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:7px 16px;border-radius:100px;border:1.5px solid var(--border);background:#fff;cursor:pointer;transition:all .2s;color:var(--gray)}
+.cat-pill:hover{border-color:var(--black);color:var(--black)}
+.cat-pill.sel{border-color:transparent;color:#fff}
+/* Pricing toggle */
+.price-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:100px;overflow:hidden;margin-bottom:16px}
+.pt-btn{flex:1;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 16px;border:none;background:#fff;cursor:pointer;transition:all .2s;color:var(--gray)}
+.pt-btn.active{background:var(--black);color:#fff}
+/* Price input with $ */
+.price-wrap{position:relative}
+.price-symbol{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#bbb;pointer-events:none}
+.price-inp{padding-left:32px}
+/* Navigation buttons */
+.nav-btns{display:flex;gap:10px;margin-top:32px}
+.btn-next{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:13px 28px;border-radius:100px;border:none;cursor:pointer;transition:all .2s}
+.btn-next.black{background:var(--black);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.14)}
+.btn-next.black:hover{background:#333;transform:translateY(-1px)}
+.btn-next.out{background:#fff;color:var(--black);border:1.5px solid var(--border)}
+.btn-next.out:hover{border-color:var(--black)}
+/* RIGHT PANEL - Preview */
+.preview-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#bbb;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.preview-label::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.preview-card{border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:20px}
+.pc-thumb{height:220px;display:flex;align-items:center;justify-content:center;background:#f7f7f7;position:relative}
+.pc-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:#ccc}
+.pc-placeholder-icon{font-size:32px}
+.pc-placeholder-txt{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.pc-info{padding:16px}
+.pc-title{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:400;color:#111;margin-bottom:4px}
+.pc-row{display:flex;justify-content:space-between;align-items:center}
+.pc-by{font-size:11px;color:#bbb}
+.pc-price{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+/* Tips */
+.tips{background:#fafafa;border-radius:10px;border:1px solid var(--border);padding:20px}
+.tips-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#bbb;margin-bottom:14px}
+.tip-item{display:flex;gap:10px;margin-bottom:12px;font-size:12px;line-height:1.6;color:#555}
+.tip-item:last-child{margin-bottom:0}
+.tip-icon{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;background:#f0f0f0}
+/* Success state */
+.success-screen{display:none;text-align:center;padding:60px 24px}
+.success-icon{font-size:56px;margin-bottom:24px}
+.success-title{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:10px}
+.success-sub{font-size:14px;color:var(--gray);line-height:1.7;margin-bottom:32px}
+/* Bottom bar */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--bar-h);background:#fff;border-top:1px solid var(--border);overflow:hidden;display:flex;align-items:center}
+.marq-track{display:flex;align-items:center;animation:marqRoll 20s linear infinite;white-space:nowrap;will-change:transform}
+.marq-track:hover{animation-play-state:paused}
+@keyframes marqRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mq-item{display:inline-flex;align-items:center;gap:22px;padding:0 22px}
+.mq-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:8px 22px;border-radius:100px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
+.mq-btn:hover{opacity:.8;transform:scale(.96)}
+.mq-dot{color:#ddd;font-size:20px;user-select:none}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="window.location.href='artroom-home.html'">← Discover</button>
+  </div>
+  <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
+  <div class="nav-right">
+    <div class="sign-wrap">
+      <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
+      <div class="sign-board" onclick="goTo('artroom-studio.html')">
+        <span class="sign-text">Open Studio</span><span class="sign-sub">Enter your space</span>
+        <div class="sign-dots"><div class="sign-dot"></div><div class="sign-dot"></div><div class="sign-dot"></div></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="mainPage">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="page-title">Upload &amp; Sell</div>
+    <p class="page-sub">Share your art, designs, and templates with 84,000+ creators. Set your price, reach your audience.</p>
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="step active" id="step1tab" onclick="goStep(1)"><span class="step-num">1</span> Files</div>
+      <div class="step" id="step2tab" onclick="goStep(2)"><span class="step-num">2</span> Details</div>
+      <div class="step" id="step3tab" onclick="goStep(3)"><span class="step-num">3</span> Pricing</div>
+    </div>
+
+    <!-- STEP 1: Upload -->
+    <div class="section active" id="sec1">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave()" ondrop="dropFiles(event)">
+        <div class="dz-icon">📁</div>
+        <div class="dz-title">Drop your files here</div>
+        <div class="dz-sub">or click to browse from your computer</div>
+        <div class="dz-types">
+          <span class="dz-type">PNG</span><span class="dz-type">JPG</span><span class="dz-type">SVG</span>
+          <span class="dz-type">PDF</span><span class="dz-type">ZIP</span><span class="dz-type">Fig</span>
+        </div>
+      </div>
+      <input type="file" id="fileInput" class="file-hidden" multiple accept="image/*,.pdf,.zip,.fig" onchange="handleFiles(this.files)">
+      <div class="uploaded-files" id="uploadedFiles"></div>
+      <div class="nav-btns">
+        <button class="btn-next black" onclick="goStep(2)">Continue → Details</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Details -->
+    <div class="section" id="sec2">
+      <div class="field">
+        <label class="label">Title *</label>
+        <input class="inp" id="titleInp" placeholder="e.g. Lumis Brand Identity System" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <label class="label">Description</label>
+        <textarea class="inp" placeholder="What's included? Who is it for? What makes it special?"></textarea>
+      </div>
+      <div class="field">
+        <label class="label">Category</label>
+        <div class="cat-row" id="catRow">
+          <button class="cat-pill" style="--c:#FFB3C6;--ct:#0a0a0a" onclick="selCat(this,'brand')">Branding</button>
+          <button class="cat-pill" style="--c:#1B4FE8;--ct:#fff" onclick="selCat(this,'ui')">UI Kit</button>
+          <button class="cat-pill" style="--c:#FFE500;--ct:#0a0a0a" onclick="selCat(this,'type')">Typography</button>
+          <button class="cat-pill" style="--c:#1A7A3C;--ct:#fff" onclick="selCat(this,'illus')">Illustration</button>
+          <button class="cat-pill" style="--c:#FF5F1F;--ct:#fff" onclick="selCat(this,'motion')">Motion</button>
+          <button class="cat-pill" style="--c:#7B3FA0;--ct:#fff" onclick="selCat(this,'3d')">3D</button>
+          <button class="cat-pill" style="--c:#0D1B4B;--ct:#fff" onclick="selCat(this,'template')">Template</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Tags (comma separated)</label>
+        <input class="inp" placeholder="brand, identity, minimal, dark">
+      </div>
+      <div class="nav-btns">
+        <button class="btn-next out" onclick="goStep(1)">← Back</button>
+        <button class="btn-next black" onclick="goStep(3)">Continue → Pricing</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Pricing -->
+    <div class="section" id="sec3">
+      <div class="field">
+        <label class="label">Listing Type</label>
+        <div class="price-toggle">
+          <button class="pt-btn active" id="ptPaid" onclick="setPricing('paid')">Paid</button>
+          <button class="pt-btn" id="ptFree" onclick="setPricing('free')">Free</button>
+          <button class="pt-btn" id="ptDonate" onclick="setPricing('donate')">Pay What You Want</button>
+        </div>
+      </div>
+      <div class="inp-row" id="priceFields">
+        <div class="field">
+          <label class="label">Price (USD)</label>
+          <div class="price-wrap">
+            <span class="price-symbol">$</span>
+            <input class="inp price-inp" id="priceInp" type="number" min="1" value="49" placeholder="49" oninput="updatePreview()">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">License</label>
+          <select class="inp" style="cursor:pointer;appearance:none">
+            <option>Personal Use</option>
+            <option>Commercial Use</option>
+            <option>Extended License</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Revenue Share</label>
+        <div style="padding:14px;background:#fafafa;border-radius:8px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:13px;color:var(--gray)">ArtRoom platform fee</span>
+            <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700">15%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:13px;color:var(--gray)">You receive</span>
+            <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--green)" id="earnAmt">$41.65</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-next out" onclick="goStep(2)">← Back</button>
+        <button class="btn-next black" onclick="publish()">Publish Listing →</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">You're live!</div>
+      <p class="success-sub">Your listing is now live in the ArtRoom Gallery.<br>Share it with your audience to start selling.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-next black" onclick="goTo('artroom-gallery.html')">View in Gallery →</button>
+        <button class="btn-next out" onclick="goTo('artroom-studio.html')">Open My Studio</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Preview -->
+  <div class="right-panel">
+    <div class="preview-label">Live Preview</div>
+    <div class="preview-card">
+      <div class="pc-thumb" id="pcThumb">
+        <div class="pc-placeholder">
+          <div class="pc-placeholder-icon">🖼</div>
+          <div class="pc-placeholder-txt">Upload to preview</div>
+        </div>
+      </div>
+      <div class="pc-info">
+        <div class="pc-title" id="pcTitle">Untitled Listing</div>
+        <div class="pc-row">
+          <span class="pc-by">you.artroom</span>
+          <span class="pc-price" id="pcPrice">$49</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tips">
+      <div class="tips-title">Tips for selling</div>
+      <div class="tip-item"><div class="tip-icon">✦</div><div>High-quality preview images increase sales by <strong>3×</strong> on average.</div></div>
+      <div class="tip-item"><div class="tip-icon">$</div><div>Listings priced between <strong>$29–$99</strong> have the highest conversion rate.</div></div>
+      <div class="tip-item"><div class="tip-icon">🏷</div><div>Add 5–8 relevant tags to improve search visibility significantly.</div></div>
+      <div class="tip-item"><div class="tip-icon">📦</div><div>Bundle related files — packs sell <strong>60% more</strong> than single items.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar"><div class="marq-track" id="marqTrack"></div></div>
+
+<script>
+let step = 1;
+const mockFiles = [];
+
+function goStep(n) {
+  // Mark previous steps as done
+  [1,2,3].forEach(i => {
+    const tab = document.getElementById('step'+i+'tab');
+    const sec = document.getElementById('sec'+i);
+    tab.classList.remove('active','done');
+    sec.classList.remove('active');
+    if (i < n) tab.classList.add('done');
+  });
+  document.getElementById('step'+n+'tab').classList.add('active');
+  document.getElementById('sec'+n).classList.add('active');
+  step = n;
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag'); }
+function dragLeave() { document.getElementById('dropZone').classList.remove('drag'); }
+
+function dropFiles(e) {
+  e.preventDefault();
+  dragLeave();
+  handleFiles(e.dataTransfer.files);
+}
+
+function handleFiles(files) {
+  const container = document.getElementById('uploadedFiles');
+  Array.from(files).forEach(file => {
+    const ext = file.name.split('.').pop().toUpperCase();
+    const size = (file.size / 1024 / 1024).toFixed(1);
+    const icons = {PNG:'🖼',JPG:'📷',JPEG:'📷',SVG:'✏️',PDF:'📄',ZIP:'📦',FIG:'🎨',GIF:'🎞'};
+    const icon = icons[ext] || '📁';
+    const div = document.createElement('div');
+    div.className = 'uf-item';
+
+    /* Show real image thumbnail for image files */
+    const isImage = file.type.startsWith('image/');
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        div.querySelector('.uf-thumb').style.cssText = 'width:44px;height:44px;border-radius:6px;flex-shrink:0;background-size:cover;background-position:center;background-image:url(' + e.target.result + ')';
+        /* Update the preview card with real image */
+        const thumb = document.getElementById('pcThumb');
+        thumb.style.background = 'url(' + e.target.result + ') center/cover';
+        thumb.innerHTML = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    div.innerHTML = `
+      <div class="uf-thumb" style="background:#f0f0f0">${isImage ? '' : icon}</div>
+      <div class="uf-info">
+        <div class="uf-name">${file.name}</div>
+        <div class="uf-size">${size} MB · ${ext}</div>
+      </div>
+      <button class="uf-remove" onclick="this.parentElement.remove()">✕</button>`;
+    container.appendChild(div);
+
+    if (!isImage) {
+      const colors = ['#FFB3C6','#1B4FE8','#FFE500','#1A7A3C','#FF5F1F','#7B3FA0'];
+      const c = colors[Math.floor(Math.random()*colors.length)];
+      document.getElementById('pcThumb').style.background = c;
+      document.getElementById('pcThumb').innerHTML = `<div style="font-size:48px;opacity:.3">${icon}</div>`;
+    }
+  });
+}
+
+let selectedCat = null;
+const catColors = {brand:'#FFB3C6',ui:'#1B4FE8',type:'#FFE500',illus:'#1A7A3C',motion:'#FF5F1F','3d':'#7B3FA0',template:'#0D1B4B'};
+const catTc = {brand:'#0a0a0a',ui:'#fff',type:'#0a0a0a',illus:'#fff',motion:'#fff','3d':'#fff',template:'#fff'};
+
+function selCat(btn, tag) {
+  document.querySelectorAll('.cat-pill').forEach(p => { p.classList.remove('sel'); p.style.background='#fff'; p.style.color='var(--gray)'; p.style.borderColor='var(--border)'; });
+  btn.classList.add('sel');
+  btn.style.background = catColors[tag];
+  btn.style.color = catTc[tag];
+  btn.style.borderColor = catColors[tag];
+  selectedCat = tag;
+}
+
+function setPricing(type) {
+  document.querySelectorAll('.pt-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pt'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
+  const pf = document.getElementById('priceFields');
+  if (type === 'free') {
+    pf.style.opacity = '.4'; pf.style.pointerEvents = 'none';
+    document.getElementById('pcPrice').textContent = 'Free';
+    document.getElementById('earnAmt').textContent = '$0';
+  } else {
+    pf.style.opacity = '1'; pf.style.pointerEvents = '';
+    updatePreview();
+  }
+}
+
+function updatePreview() {
+  const t = document.getElementById('titleInp').value || 'Untitled Listing';
+  document.getElementById('pcTitle').textContent = t;
+  const price = parseFloat(document.getElementById('priceInp').value) || 49;
+  document.getElementById('pcPrice').textContent = '$' + price;
+  document.getElementById('earnAmt').textContent = '$' + (price * 0.85).toFixed(2);
+}
+
+function publish() {
+  const title = document.getElementById('titleInp').value || 'Untitled Listing';
+  const price = '$' + (document.getElementById('priceInp').value || '49');
+
+  /* Save to state so it shows up in Studio and Gallery */
+  ArtState.addPurchase({ title: title, price: price, by: 'you', type: 'listing' });
+
+  document.getElementById('sec3').classList.remove('active');
+  document.getElementById('step3tab').classList.remove('active');
+  document.getElementById('step3tab').classList.add('done');
+  document.getElementById('successScreen').style.display = 'block';
+}
+
+// Marquee
+const MQ=[
+  {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
+  {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
+];
+const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
+document.getElementById('marqTrack').innerHTML=ch+ch;
+function goTo(p){window.location.href=p;}
+</script>
+</body>
+</html>

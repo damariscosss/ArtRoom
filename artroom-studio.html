@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArtRoom — My Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="state.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root { --black:#0a0a0a; --border:#e8e8e8; --gray:#999; --red:#E8001A; --nav-h:56px; --bar-h:50px; }
+body { background:#fff; color:var(--black); font-family:'DM Sans',sans-serif; overflow-x:hidden; }
+
+.nav { position:fixed; top:0; left:0; right:0; z-index:200; height:var(--nav-h); background:#fff; border-bottom:1px solid var(--border); display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 28px; }
+.nav-left { display:flex; align-items:center; gap:10px; }
+.nav-back { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; background:none; border:none; cursor:pointer; color:var(--black); display:flex; align-items:center; gap:6px; padding:4px 2px; transition:opacity .2s; text-decoration:none; }
+.nav-back:hover { opacity:.45; }
+.nav-logo { font-family:'Syne',sans-serif; font-size:18px; font-weight:800; letter-spacing:-.02em; color:var(--black); text-decoration:none; text-align:center; display:block; }
+.nav-right { display:flex; justify-content:flex-end; align-items:flex-end; }
+
+/* RED CLOSE SIGN */
+.sign-wrap { display:flex; flex-direction:column; align-items:center; }
+.sign-chain { display:flex; flex-direction:column; align-items:center; gap:1px; padding-top:5px; }
+.chain-link { width:7px; height:4px; border:1.5px solid rgba(232,0,26,.3); border-radius:50%; }
+.chain-link:nth-child(odd) { transform:rotate(90deg); }
+.sign-board { display:block; text-decoration:none; text-align:center; padding:8px 18px 10px; border:1.5px solid var(--red); border-radius:7px; background:var(--red); cursor:pointer; transform-origin:top center; animation:signRock 3.8s ease-in-out infinite; user-select:none; min-width:128px; position:relative; }
+.sign-board::before { content:''; position:absolute; top:-2px; left:14px; right:14px; height:5px; background:#fff; z-index:1; }
+.sign-text { font-family:'Syne',sans-serif; font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#fff; display:block; line-height:1; }
+.sign-sub { font-family:'DM Sans',sans-serif; font-size:8px; font-weight:300; letter-spacing:.13em; text-transform:uppercase; color:rgba(255,255,255,.65); display:block; margin-top:4px; line-height:1; }
+.sign-dots { display:flex; justify-content:center; gap:4px; margin-top:7px; }
+.sign-dot { width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,.5); }
+@keyframes signRock { 0%,100%{transform:rotate(-3deg)} 50%{transform:rotate(3deg)} }
+
+/* PAGE LAYOUT */
+.page { padding-top:var(--nav-h); padding-bottom:var(--bar-h); display:grid; grid-template-columns:220px 1fr; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar { border-right:1px solid var(--border); padding:28px 0; position:sticky; top:var(--nav-h); height:calc(100vh - var(--nav-h)); overflow-y:auto; }
+.sidebar-profile { padding:0 20px 24px; border-bottom:1px solid var(--border); }
+.s-av { width:52px; height:52px; border-radius:50%; background:var(--red); color:#fff; font-family:'Syne',sans-serif; font-size:22px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-bottom:12px; overflow:hidden; background-size:cover; background-position:center; }
+.s-name { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; margin-bottom:2px; }
+.s-handle { font-size:11px; color:var(--gray); margin-bottom:14px; }
+.s-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px; }
+.s-stat { text-align:center; }
+.s-stat-n { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; display:block; }
+.s-stat-l { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--gray); }
+.edit-btn { width:100%; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:7px 16px; border-radius:100px; border:1.5px solid var(--border); cursor:pointer; background:#fff; transition:all .2s; }
+.edit-btn:hover { border-color:var(--black); }
+
+.snav-label { font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#ccc; padding:0 20px; margin-bottom:6px; margin-top:18px; display:block; }
+.snav-item { display:flex; align-items:center; gap:10px; padding:9px 20px; font-size:12px; color:var(--gray); cursor:pointer; background:none; border:none; width:100%; text-align:left; transition:background .15s, color .15s; }
+.snav-item:hover { background:#f7f7f7; color:var(--black); }
+.snav-item.active { background:#f7f7f7; color:var(--black); font-weight:500; }
+.snav-badge { margin-left:auto; background:var(--red); color:#fff; font-size:8px; font-weight:700; padding:2px 7px; border-radius:100px; }
+
+/* MAIN */
+.main { padding:32px 32px 60px; }
+.apill { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:6px 16px; border-radius:100px; border:none; cursor:pointer; transition:opacity .2s, transform .15s; }
+.apill:hover { opacity:.75; }
+.apill:active { transform:scale(.95); }
+.apill.black { background:var(--black); color:#fff; }
+.apill.red { background:var(--red); color:#fff; }
+.apill.out { background:#fff; color:var(--black); border:1.5px solid var(--border); }
+.apill.out:hover { border-color:var(--black); }
+
+/* Quick stats */
+.qs { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:28px; }
+.qs-card { padding:20px 22px; border-right:1px solid var(--border); }
+.qs-card:last-child { border-right:none; }
+.qs-l { font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--gray); margin-bottom:6px; display:block; }
+.qs-n { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; display:block; line-height:1; }
+.qs-d { font-size:10px; color:#1A7A3C; margin-top:3px; display:block; }
+.qs-d.down { color:var(--red); }
+
+/* AI panel */
+.ai-panel { border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:28px; }
+.ai-header { padding:13px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:#fafafa; }
+.ai-dot { width:7px; height:7px; border-radius:50%; background:#1A7A3C; animation:aipulse 2s ease-in-out infinite; }
+@keyframes aipulse { 0%,100%{box-shadow:0 0 0 0 rgba(26,122,58,.4)} 50%{box-shadow:0 0 0 5px rgba(26,122,58,0)} }
+.ai-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; }
+.ai-sub { font-size:10px; color:var(--gray); margin-left:auto; }
+.ai-msgs { padding:16px 18px; display:flex; flex-direction:column; gap:10px; max-height:180px; overflow-y:auto; }
+.ai-msg { display:flex; gap:9px; }
+.ai-msg.u { flex-direction:row-reverse; }
+.ai-bub { max-width:80%; padding:9px 13px; border-radius:9px; font-size:12px; line-height:1.65; }
+.ai-bub.ai { background:#f5f5f5; color:#333; }
+.ai-bub.u { background:var(--black); color:#fff; }
+.ai-row { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; }
+.ai-inp { flex:1; border:1px solid var(--border); border-radius:100px; padding:8px 14px; font-family:'DM Sans',sans-serif; font-size:12px; outline:none; transition:border-color .2s; }
+.ai-inp:focus { border-color:var(--black); }
+
+/* Section head */
+.sec-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.sec-title { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:.03em; }
+
+/* Works strip */
+.wstrip { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; margin-bottom:28px; scrollbar-width:none; }
+.wstrip::-webkit-scrollbar { display:none; }
+.wthumb { flex-shrink:0; width:118px; border-radius:6px; overflow:hidden; cursor:pointer; border:1px solid var(--border); transition:transform .2s, box-shadow .2s; position:relative; }
+.wthumb:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(0,0,0,.1); }
+.wthumb:hover .wt-ov { opacity:1; }
+.wt-img { width:118px; height:88px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.wt-img svg { width:100%; height:100%; display:block; }
+.wt-lbl { padding:7px 9px 9px; background:#fff; font-size:10px; color:#111; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.wt-ov { position:absolute; inset:0; background:rgba(0,0,0,.28); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; color:#fff; font-family:'Syne',sans-serif; font-size:9px; font-weight:700; letter-spacing:.1em; }
+.add-th { flex-shrink:0; width:118px; height:120px; border:1.5px dashed #d5d5d5; border-radius:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; color:#ccc; transition:border-color .2s, color .2s; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; }
+.add-th:hover { border-color:var(--black); color:var(--black); }
+.add-sec-btn { width:100%; border:1.5px dashed #ddd; border-radius:6px; padding:18px; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#bbb; cursor:pointer; background:#fff; transition:all .2s; }
+.add-sec-btn:hover { border-color:var(--black); color:var(--black); }
+
+/* Bottom bar */
+.bottom-bar { position:fixed; bottom:0; left:0; right:0; z-index:200; height:var(--bar-h); background:#fff; border-top:1px solid var(--border); overflow:hidden; display:flex; align-items:center; }
+.marq-track { display:flex; align-items:center; animation:marqRoll 20s linear infinite; white-space:nowrap; will-change:transform; }
+.marq-track:hover { animation-play-state:paused; }
+@keyframes marqRoll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.mq-item { display:inline-flex; align-items:center; gap:22px; padding:0 22px; }
+.mq-btn { font-family:'Syne',sans-serif; font-size:12px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:8px 22px; border-radius:100px; border:none; cursor:pointer; transition:opacity .2s, transform .15s; }
+.mq-btn:hover { opacity:.8; transform:scale(.96); }
+.mq-dot { color:#ddd; font-size:20px; user-select:none; }
+
+/* Upload modal */
+.modal-bg { display:none; position:fixed; inset:0; z-index:800; background:rgba(255,255,255,.92); backdrop-filter:blur(12px); align-items:center; justify-content:center; }
+.modal-box { background:#fff; border:1px solid #e5e5e5; border-radius:10px; width:520px; box-shadow:0 20px 60px rgba(0,0,0,.1); overflow:hidden; }
+.modal-head { padding:20px 24px; border-bottom:1px solid #e5e5e5; display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; }
+.modal-close { width:32px; height:32px; border:1px solid #e5e5e5; border-radius:50%; background:none; cursor:pointer; font-size:14px; transition:background .15s; }
+.modal-close:hover { background:#f0f0f0; }
+.modal-body { padding:24px; }
+.drop-zone { border:2px dashed #ddd; border-radius:6px; padding:48px 24px; text-align:center; margin-bottom:16px; cursor:pointer; transition:border-color .2s; }
+.drop-zone:hover { border-color:var(--black); }
+.form-inp { width:100%; border:1px solid #e5e5e5; border-radius:6px; padding:10px 14px; font-family:'DM Sans',sans-serif; font-size:12px; outline:none; margin-bottom:10px; transition:border-color .2s; }
+.form-inp:focus { border-color:var(--black); }
+.modal-foot { padding:16px 24px; border-top:1px solid #e5e5e5; display:flex; justify-content:flex-end; gap:10px; }
+.ep-tag-btn { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.04em; padding:6px 14px; border-radius:100px; border:1.5px solid var(--border); background:#fff; color:var(--gray); cursor:pointer; transition:all .15s; }
+.ep-tag-btn:hover { border-color:var(--black); color:var(--black); }
+.ep-tag-btn.active { background:var(--black); color:#fff; border-color:var(--black); }
+.modal-body { display:flex; flex-direction:column; gap:10px; }
+.sk-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:24px; }
+.sk-tab { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:10px 18px; background:none; border:none; cursor:pointer; color:#ccc; position:relative; transition:color .2s; }
+.sk-tab:hover { color:var(--black); }
+.sk-tab.active { color:var(--black); }
+.sk-tab.active::after { content:''; position:absolute; bottom:-1px; left:0; width:100%; height:2px; background:var(--black); }
+.sk-price-btn { flex:1; font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:8px 14px; border:none; background:#fff; cursor:pointer; transition:all .2s; color:var(--gray); }
+.sk-price-btn.active { background:var(--black); color:#fff; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <a onclick="window.location.href='artroom-home.html'" class="nav-back">← Discover</a>
+  </div>
+  <div style="text-align:center">
+    <a onclick="window.location.href='artroom-home.html'" class="nav-logo">ArtRoom</a>
+  </div>
+  <div class="nav-right">
+    <div class="sign-wrap">
+      <div class="sign-chain">
+        <div class="chain-link"></div>
+        <div class="chain-link"></div>
+        <div class="chain-link"></div>
+        <div class="chain-link"></div>
+      </div>
+      <a onclick="window.location.href='artroom-home.html'" class="sign-board">
+        <span class="sign-text">Close Studio</span>
+        <span class="sign-sub">Back to discover</span>
+        <div class="sign-dots">
+          <div class="sign-dot"></div>
+          <div class="sign-dot"></div>
+          <div class="sign-dot"></div>
+        </div>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <aside class="sidebar">
+    <div class="sidebar-profile">
+      <div class="s-av">M</div>
+      <div class="s-name">Maya Chen</div>
+      <div class="s-handle">@maya.artroom</div>
+      <div class="s-stats">
+        <div class="s-stat"><span class="s-stat-n">42</span><span class="s-stat-l">Works</span></div>
+        <div class="s-stat"><span class="s-stat-n">12k</span><span class="s-stat-l">Followers</span></div>
+        <div class="s-stat"><span class="s-stat-n">$4.8k</span><span class="s-stat-l">Earned</span></div>
+      </div>
+      <button class="edit-btn" onclick="openEditProfile()">Edit Profile</button>
+    </div>
+
+    <span class="snav-label">Studio</span>
+    <button class="snav-item active" onclick="switchView(this,'sections')">▦ &nbsp;Sections</button>
+    <button class="snav-item" onclick="switchView(this,'analytics')">↗ &nbsp;Analytics <span class="snav-badge">New</span></button>
+    <button class="snav-item" onclick="switchView(this,'earnings')">$ &nbsp;Earnings</button>
+
+    <span class="snav-label">Gallery</span>
+    <button class="snav-item" onclick="switchView(this,'listings')">🖼 &nbsp;My Listings</button>
+    <button class="snav-item" onclick="openUpload()">+ &nbsp;New Listing</button>
+    <button class="snav-item" onclick="switchView(this,'jobs')">&#x1F4BC; &nbsp;Jobs &amp; Gigs</button>
+
+    <span class="snav-label">AI Skills</span>
+    <button class="snav-item" onclick="switchView(this,'skills')">&#x1F3A8; &nbsp;My Skills</button>
+  </aside>
+
+  <main class="main">
+
+    <!-- SECTIONS VIEW -->
+    <div id="v-sections">
+      <div class="qs">
+        <div class="qs-card"><span class="qs-l">Views Today</span><span class="qs-n">1,247</span><span class="qs-d">↑ +18% vs yesterday</span></div>
+        <div class="qs-card"><span class="qs-l">New Followers</span><span class="qs-n">+38</span><span class="qs-d">↑ +12% this week</span></div>
+        <div class="qs-card"><span class="qs-l">Earnings This Month</span><span class="qs-n">$312</span><span class="qs-d down">↓ –4% vs last month</span></div>
+      </div>
+
+      <div class="ai-panel">
+        <div class="ai-header">
+          <div class="ai-dot"></div>
+          <div class="ai-title">Claude — Studio AI</div>
+          <div class="ai-sub">Powered by Anthropic</div>
+        </div>
+        <div class="ai-msgs" id="aiMsgs">
+          <div class="ai-msg"><div class="ai-bub ai">Hey Maya! You've had <strong>1,247 views today</strong> — up 18%. What would you like to do?</div></div>
+        </div>
+        <div class="ai-row">
+          <input class="ai-inp" id="aiInp" placeholder="Post work, write a listing, check analytics…" onkeydown="if(event.key==='Enter')sendAI()">
+          <button class="apill black" onclick="sendAI()">Send →</button>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <div class="sec-title">Brand Work ✦</div>
+        <div style="display:flex;gap:8px">
+          <button class="apill out">Rename</button>
+          <button class="apill red" onclick="openUpload()">+ Upload</button>
+        </div>
+      </div>
+      <div class="wstrip" id="ws1"></div>
+
+      <div class="sec-head">
+        <div class="sec-title">Editorial ✳</div>
+        <div style="display:flex;gap:8px">
+          <button class="apill out">Rename</button>
+          <button class="apill red" onclick="openUpload()">+ Upload</button>
+        </div>
+      </div>
+      <div class="wstrip" id="ws2"></div>
+
+      <button class="add-sec-btn" onclick="addSection()">+ Add New Section</button>
+    </div>
+
+    <!-- ANALYTICS VIEW -->
+    <div id="v-analytics" style="display:none">
+      <div class="qs" style="margin-bottom:16px">
+        <div class="qs-card"><span class="qs-l">Total Views (30d)</span><span class="qs-n">48,210</span><span class="qs-d">↑ +18.4%</span></div>
+        <div class="qs-card"><span class="qs-l">New Followers</span><span class="qs-n">1,204</span><span class="qs-d">↑ +31.2%</span></div>
+        <div class="qs-card"><span class="qs-l">Gallery Revenue</span><span class="qs-n">$4,812</span><span class="qs-d down">↓ –4.1%</span></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--border);background:#fafafa;font-family:'Syne',sans-serif;font-size:12px;font-weight:700">Top Performing Works</div>
+        <div style="display:grid;grid-template-columns:36px 1fr 80px 80px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px"><div style="width:36px;height:28px;border-radius:3px;background:#FFB3C6"></div><div style="font-size:13px">a soft system</div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">12.4k</div><div style="font-size:11px;color:#bbb">&#9829; 847</div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#1A7A3C">$480</div></div>
+        <div style="display:grid;grid-template-columns:36px 1fr 80px 80px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px"><div style="width:36px;height:28px;border-radius:3px;background:#E8001A"></div><div style="font-size:13px">signal work</div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">9.7k</div><div style="font-size:11px;color:#bbb">&#9829; 561</div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#1A7A3C">$267</div></div>
+        <div style="display:grid;grid-template-columns:36px 1fr 80px 80px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px"><div style="width:36px;height:28px;border-radius:3px;background:#1A7A3C"></div><div style="font-size:13px">deep roots</div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">6.8k</div><div style="font-size:11px;color:#bbb">&#9829; 312</div><div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#1A7A3C">$144</div></div>
+      </div>
+    </div>
+
+    <!-- EARNINGS VIEW -->
+    <div id="v-earnings" style="display:none">
+      <div class="qs" style="margin-bottom:24px">
+        <div class="qs-card"><span class="qs-l">Available Balance</span><span class="qs-n" style="color:#1A7A3C">$2,140</span><span class="qs-d">Ready to withdraw</span></div>
+        <div class="qs-card"><span class="qs-l">This Month</span><span class="qs-n">$4,812</span><span class="qs-d down">↓ –4.1%</span></div>
+        <div class="qs-card"><span class="qs-l">All Time</span><span class="qs-n">$48.2k</span><span class="qs-d">↑ Growing</span></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 100px 80px 90px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border)"><div style="font-size:13px">Lumis Brand Identity Kit</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#bbb">Gallery</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$129</div><div style="font-size:10px;color:#bbb">Feb 20</div><span style="font-size:9px;font-family:'Syne',sans-serif;font-weight:700;padding:3px 10px;border-radius:100px;background:rgba(26,122,58,.1);color:#1A7A3C">Paid</span></div>
+        <div style="display:grid;grid-template-columns:1fr 100px 80px 90px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border)"><div style="font-size:13px">Brand Identity Studio Skill</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#bbb">AI Skill</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$147</div><div style="font-size:10px;color:#bbb">Feb 19</div><span style="font-size:9px;font-family:'Syne',sans-serif;font-weight:700;padding:3px 10px;border-radius:100px;background:rgba(26,122,58,.1);color:#1A7A3C">Paid</span></div>
+        <div style="display:grid;grid-template-columns:1fr 100px 80px 90px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border)"><div style="font-size:13px">Commission &#8212; Startup Rebrand</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#bbb">Commission</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$750</div><div style="font-size:10px;color:#bbb">Feb 18</div><span style="font-size:9px;font-family:'Syne',sans-serif;font-weight:700;padding:3px 10px;border-radius:100px;background:rgba(26,122,58,.1);color:#1A7A3C">Paid</span></div>
+        <div style="display:grid;grid-template-columns:1fr 100px 80px 90px 80px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border)"><div style="font-size:13px">App UI System (Final)</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#bbb">Commission</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$1,200</div><div style="font-size:10px;color:#bbb">Feb 21</div><span style="font-size:9px;font-family:'Syne',sans-serif;font-weight:700;padding:3px 10px;border-radius:100px;background:rgba(245,200,0,.15);color:#7a6500">Pending</span></div>
+      </div>
+    </div>
+
+    <!-- LISTINGS VIEW -->
+    <div id="v-listings" style="display:none">
+      <div class="sec-head" style="margin-bottom:20px">
+        <div class="sec-title">Gallery Listings</div>
+        <button class="apill red">+ New Listing</button>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:48px 1fr 80px 80px 90px 130px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px"><div style="width:44px;height:34px;border-radius:4px;background:#FFB3C6"></div><div style="font-size:13px">Lumis Brand Identity Kit</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">$129</div><div style="font-size:12px;color:#bbb">24 sales</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$3,096</div><div style="display:flex;gap:6px"><button class="apill out" style="font-size:9px;padding:4px 12px">Edit</button><button class="apill red" style="font-size:9px;padding:4px 12px">Unpublish</button></div></div>
+        <div style="display:grid;grid-template-columns:48px 1fr 80px 80px 90px 130px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px"><div style="width:44px;height:34px;border-radius:4px;background:#2E2E2E"></div><div style="font-size:13px">Editorial Layout System</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">$89</div><div style="font-size:12px;color:#bbb">18 sales</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$1,602</div><div style="display:flex;gap:6px"><button class="apill out" style="font-size:9px;padding:4px 12px">Edit</button><button class="apill red" style="font-size:9px;padding:4px 12px">Unpublish</button></div></div>
+        <div style="display:grid;grid-template-columns:48px 1fr 80px 80px 90px 130px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px"><div style="width:44px;height:34px;border-radius:4px;background:#FFE500"></div><div style="font-size:13px">Color Systems Workbook</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">$39</div><div style="font-size:12px;color:#bbb">7 sales</div><div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#1A7A3C">$273</div><div style="display:flex;gap:6px"><button class="apill out" style="font-size:9px;padding:4px 12px">Edit</button><button class="apill red" style="font-size:9px;padding:4px 12px">Unpublish</button></div></div>
+      </div>
+    </div>
+
+    <!-- JOBS & GIGS VIEW -->
+    <div id="v-jobs" style="display:none">
+      <div class="sec-head" style="margin-bottom:20px">
+        <div class="sec-title">Jobs &amp; Gigs</div>
+        <button class="apill black" onclick="window.location.href='artroom-jobs.html'">Browse Jobs &#x2192;</button>
+      </div>
+      <div id="jobsList"></div>
+    </div>
+
+    <!-- MY SKILLS VIEW -->
+    <div id="v-skills" style="display:none">
+      <div class="sk-tabs">
+        <button class="sk-tab active" onclick="switchSkillTab(this,'installed')">Installed</button>
+        <button class="sk-tab" onclick="switchSkillTab(this,'upload')">Upload Skill</button>
+        <button class="sk-tab" onclick="window.location.href='artroom-skill-vault.html'">Browse Vault &#x2192;</button>
+      </div>
+
+      <!-- Installed tab -->
+      <div id="sk-installed">
+        <div id="skillsList"></div>
+      </div>
+
+      <!-- Upload tab -->
+      <div id="sk-upload" style="display:none">
+        <div style="border:2px dashed var(--border);border-radius:10px;padding:48px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:20px" id="skDropZone" onclick="document.getElementById('skFileInput').click()" ondragover="event.preventDefault();this.style.borderColor='#0a0a0a';this.style.background='#fafafa'" ondragleave="this.style.borderColor='';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='';this.style.background='';handleSkillFiles(event.dataTransfer.files)">
+          <div style="font-size:32px;margin-bottom:12px">&#x1F4C1;</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px">Drop your skill files here</div>
+          <div style="font-size:12px;color:var(--gray);margin-bottom:14px">or click to browse from your computer</div>
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+            <span style="font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;padding:3px 10px;border-radius:100px;border:1px solid var(--border);color:var(--gray)">PNG</span>
+            <span style="font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;padding:3px 10px;border-radius:100px;border:1px solid var(--border);color:var(--gray)">SVG</span>
+            <span style="font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;padding:3px 10px;border-radius:100px;border:1px solid var(--border);color:var(--gray)">PDF</span>
+            <span style="font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;padding:3px 10px;border-radius:100px;border:1px solid var(--border);color:var(--gray)">ZIP</span>
+            <span style="font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;padding:3px 10px;border-radius:100px;border:1px solid var(--border);color:var(--gray)">FIG</span>
+          </div>
+        </div>
+        <input type="file" id="skFileInput" multiple accept="image/*,.pdf,.zip,.fig" style="display:none" onchange="handleSkillFiles(this.files)">
+        <div id="skUploadedFiles" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+
+        <div style="margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);margin-bottom:6px">Title *</div>
+          <input class="form-inp" id="skTitle" placeholder="e.g. Brand Identity Studio System">
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);margin-bottom:6px">Description</div>
+          <textarea class="form-inp" id="skDesc" placeholder="What's included? Who is it for?" rows="3" style="resize:vertical;font-family:'DM Sans',sans-serif"></textarea>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);margin-bottom:6px">Category</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="skCatRow">
+            <button class="ep-tag-btn" data-cat="Branding" onclick="selSkCat(this)">Branding</button>
+            <button class="ep-tag-btn" data-cat="UI Kit" onclick="selSkCat(this)">UI Kit</button>
+            <button class="ep-tag-btn" data-cat="Typography" onclick="selSkCat(this)">Typography</button>
+            <button class="ep-tag-btn" data-cat="Illustration" onclick="selSkCat(this)">Illustration</button>
+            <button class="ep-tag-btn" data-cat="Motion" onclick="selSkCat(this)">Motion</button>
+            <button class="ep-tag-btn" data-cat="3D" onclick="selSkCat(this)">3D</button>
+            <button class="ep-tag-btn" data-cat="Template" onclick="selSkCat(this)">Template</button>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);margin-bottom:6px">Pricing</div>
+          <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:100px;overflow:hidden;margin-bottom:12px">
+            <button class="sk-price-btn active" onclick="setSkPricing(this,'paid')">Paid</button>
+            <button class="sk-price-btn" onclick="setSkPricing(this,'free')">Free</button>
+            <button class="sk-price-btn" onclick="setSkPricing(this,'donate')">Pay What You Want</button>
+          </div>
+          <div id="skPriceRow" style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#bbb">$</span>
+            <input class="form-inp" id="skPrice" type="number" min="1" value="49" placeholder="49" style="width:120px" oninput="updateSkEarn()">
+            <span style="font-size:11px;color:var(--gray);margin-left:8px">You earn <strong id="skEarnAmt" style="color:#1A7A3C">$41.65</strong> (85%)</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:24px">
+          <button class="apill out" onclick="resetSkillUpload()">Clear</button>
+          <button class="apill black" onclick="publishSkill()">Publish Skill &#x2192;</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="bottom-bar"><div class="marq-track" id="marqTrack"></div></div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-bg" id="uploadModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">Upload Work</span>
+      <button class="modal-close" onclick="closeUpload()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="drop-zone">
+        <div style="font-size:32px;margin-bottom:10px">📁</div>
+        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px">Drop files here</div>
+        <div style="font-size:12px;color:#bbb">PNG, JPG, GIF, PDF up to 100MB</div>
+      </div>
+      <input class="form-inp" placeholder="Title — e.g. Lumis Brand System">
+      <select class="form-inp" style="appearance:none;cursor:pointer">
+        <option>Brand Work</option><option>Editorial</option><option>+ New Section</option>
+      </select>
+      <input class="form-inp" placeholder="Tags — brand, identity, systems">
+    </div>
+    <div class="modal-foot">
+      <button class="apill out" onclick="closeUpload()">Cancel</button>
+      <button class="apill out" onclick="closeUpload()">Save Draft</button>
+      <button class="apill black" onclick="closeUpload()">Publish Work →</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-bg" id="editProfileModal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <span class="modal-title">Edit Profile</span>
+      <button class="modal-close" onclick="closeEditProfile()">&#x2715;</button>
+    </div>
+    <div class="modal-body" style="gap:14px">
+      <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:-6px">Avatar</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="epAvatar" style="width:56px;height:56px;border-radius:50%;background:#FFB3C6;color:#0a0a0a;font-family:'Syne',sans-serif;font-size:24px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;overflow:hidden;background-size:cover;background-position:center" onclick="document.getElementById('epFileInput').click()">M</div>
+        <div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="epColorPicker">
+            <div class="ep-swatch" data-bg="#FFB3C6" data-tc="#0a0a0a" style="width:26px;height:26px;border-radius:50%;background:#FFB3C6;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#1B4FE8" data-tc="#fff" style="width:26px;height:26px;border-radius:50%;background:#1B4FE8;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#FFE500" data-tc="#0a0a0a" style="width:26px;height:26px;border-radius:50%;background:#FFE500;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#E8001A" data-tc="#fff" style="width:26px;height:26px;border-radius:50%;background:#E8001A;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#1A7A3C" data-tc="#fff" style="width:26px;height:26px;border-radius:50%;background:#1A7A3C;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#7B3FA0" data-tc="#fff" style="width:26px;height:26px;border-radius:50%;background:#7B3FA0;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#FF5F1F" data-tc="#fff" style="width:26px;height:26px;border-radius:50%;background:#FF5F1F;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+            <div class="ep-swatch" data-bg="#0D1B4B" data-tc="#fff" style="width:26px;height:26px;border-radius:50%;background:#0D1B4B;cursor:pointer;border:2px solid transparent" onclick="pickColor(this)"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
+            <input type="file" id="epFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+            <span style="font-size:10px;color:#1B4FE8;cursor:pointer" onclick="document.getElementById('epFileInput').click()">Upload photo</span>
+            <span id="epRemovePhoto" style="font-size:10px;color:#E8001A;cursor:pointer;display:none" onclick="removeAvatarPhoto()">Remove photo</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:-6px">Display Name</div>
+      <input class="form-inp" id="epName" placeholder="Your name" value="Maya Chen">
+      <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:-6px">Username</div>
+      <div style="display:flex;align-items:center;gap:0">
+        <span style="font-size:12px;color:#bbb;padding:0 2px 0 0">@</span>
+        <input class="form-inp" id="epHandle" placeholder="username" value="maya" style="flex:1">
+        <span style="font-size:12px;color:#bbb;padding:0 0 0 2px">.artroom</span>
+      </div>
+      <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:-6px">Bio</div>
+      <textarea class="form-inp" id="epBio" placeholder="Tell people about yourself and your work..." rows="3" style="resize:vertical;font-family:'DM Sans',sans-serif"></textarea>
+      <div style="font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:-6px">Specializations</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="epTags">
+        <button class="ep-tag-btn" data-tag="Branding" onclick="toggleEpTag(this)">Branding</button>
+        <button class="ep-tag-btn" data-tag="Identity" onclick="toggleEpTag(this)">Identity</button>
+        <button class="ep-tag-btn" data-tag="UI/UX" onclick="toggleEpTag(this)">UI/UX</button>
+        <button class="ep-tag-btn" data-tag="Typography" onclick="toggleEpTag(this)">Typography</button>
+        <button class="ep-tag-btn" data-tag="Motion" onclick="toggleEpTag(this)">Motion</button>
+        <button class="ep-tag-btn" data-tag="3D" onclick="toggleEpTag(this)">3D</button>
+        <button class="ep-tag-btn" data-tag="Illustration" onclick="toggleEpTag(this)">Illustration</button>
+        <button class="ep-tag-btn" data-tag="Editorial" onclick="toggleEpTag(this)">Editorial</button>
+        <button class="ep-tag-btn" data-tag="Product" onclick="toggleEpTag(this)">Product</button>
+        <button class="ep-tag-btn" data-tag="Web" onclick="toggleEpTag(this)">Web</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="apill out" onclick="closeEditProfile()">Cancel</button>
+      <button class="apill black" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* SVG art for thumbs */
+const ARTS = [
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><path d="M10 66 Q38 18 59 44 Q80 70 108 18" stroke="rgba(0,0,0,.2)" stroke-width="1.5" fill="none"/><rect x="34" y="32" width="30" height="20" fill="rgba(255,80,80,.28)" rx="1"/></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><circle cx="59" cy="44" r="28" fill="rgba(255,255,255,.1)"/><line x1="18" y1="44" x2="100" y2="44" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/><line x1="59" y1="10" x2="59" y2="78" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="52" width="14" height="30" fill="rgba(255,255,255,.18)" rx="1"/><rect x="32" y="36" width="14" height="46" fill="rgba(255,255,255,.22)" rx="1"/><rect x="52" y="20" width="14" height="62" fill="rgba(255,255,255,.26)" rx="1"/><rect x="72" y="30" width="14" height="52" fill="rgba(255,255,255,.18)" rx="1"/></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><text x="10" y="80" font-family="Georgia,serif" font-size="86" font-weight="900" fill="rgba(0,0,0,.1)">A</text></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><ellipse cx="59" cy="44" rx="36" ry="36" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.2"/><ellipse cx="59" cy="44" rx="36" ry="13" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.2"/><ellipse cx="59" cy="44" rx="13" ry="36" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.2"/></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><polygon points="59,10 102,76 16,76" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="1.5"/><polygon points="59,10 102,76 59,50" fill="rgba(255,255,255,.1)"/></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><text x="59" y="52" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="rgba(0,0,0,.12)">Aa</text></svg>`,
+  `<svg viewBox="0 0 118 88" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><path d="M0 60 Q20 46 40 60 Q60 74 80 60 Q100 46 118 60 L118 88 L0 88Z" fill="rgba(255,255,255,.12)"/></svg>`,
+];
+
+const THUMBS1 = [
+  ['#FFB3C6','a soft system',0], ['#0D1B4B','night shift',4],
+  ['#FFE500','forma type',3],   ['#1A7A3C','deep roots',2],
+  ['#E8001A','signal work',1],
+];
+const THUMBS2 = [
+  ['#2E2E2E','void state',5], ['#E8D5B0','warm logic',6],
+  ['#FF5F1F','heat index',7],
+];
+
+function buildStrip(id, thumbs) {
+  const strip = document.getElementById(id);
+  thumbs.forEach(([bg, label, ai]) => {
+    const d = document.createElement('div');
+    d.className = 'wthumb';
+    d.innerHTML = `<div class="wt-img" style="background:${bg}">${ARTS[ai]}</div><div class="wt-lbl">${label}</div><div class="wt-ov">Open ↗</div>`;
+    strip.appendChild(d);
+  });
+  const add = document.createElement('div');
+  add.className = 'add-th';
+  add.innerHTML = '<div style="font-size:22px">+</div><div>Add Work</div>';
+  add.onclick = openUpload;
+  strip.appendChild(add);
+}
+buildStrip('ws1', THUMBS1);
+buildStrip('ws2', THUMBS2);
+
+/* View switching */
+const views = ['sections','analytics','earnings','listings','jobs','skills'];
+function switchView(btn, name) {
+  document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  views.forEach(v => {
+    const el = document.getElementById('v-'+v);
+    if (el) el.style.display = v === name ? '' : 'none';
+  });
+  if (name === 'jobs') renderJobs();
+  if (name === 'skills') renderSkills();
+}
+
+/* Jobs & Gigs */
+function renderJobs() {
+  const apps = ArtState.getApplications();
+  const wrap = document.getElementById('jobsList');
+  if (!apps.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:48px 20px;border:1px solid var(--border);border-radius:8px"><div style="font-size:32px;margin-bottom:12px">&#x1F4BC;</div><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:700;margin-bottom:6px">No applications yet</div><p style="font-size:12px;color:var(--gray);margin-bottom:16px">Browse open roles and apply with your portfolio.</p><button class="apill black" onclick="window.location.href=\'artroom-jobs.html\'">Explore Jobs &#x2192;</button></div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">' +
+    apps.map(a => '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)">' +
+      '<div><div style="font-size:13px;font-weight:500">' + a.title + '</div><div style="font-size:10px;color:var(--gray);margin-top:2px">Applied ' + new Date(a.date).toLocaleDateString() + '</div></div>' +
+      '<span style="font-size:9px;font-family:Syne,sans-serif;font-weight:700;padding:4px 12px;border-radius:100px;background:rgba(26,122,58,.1);color:#1A7A3C">Applied</span></div>'
+    ).join('') + '</div>';
+}
+
+/* My Skills */
+function renderSkills() {
+  const skills = ArtState.getSkills();
+  const wrap = document.getElementById('skillsList');
+  if (!skills.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:48px 20px;border:1px solid var(--border);border-radius:8px"><div style="font-size:32px;margin-bottom:12px">&#x1F3A8;</div><div style="font-family:Syne,sans-serif;font-size:15px;font-weight:700;margin-bottom:6px">No skills installed</div><p style="font-size:12px;color:var(--gray);margin-bottom:16px">Install AI skills to enhance your creative workflow.</p><button class="apill black" onclick="window.location.href=\'artroom-skill-vault.html\'">Browse Skill Vault &#x2192;</button></div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">' +
+    skills.map(s => '<div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border)">' +
+      '<div style="width:36px;height:36px;border-radius:50%;background:#7B3FA0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px">&#x1F3A8;</div>' +
+      '<div style="flex:1"><div style="font-size:13px;font-weight:500">' + s.name + '</div><div style="font-size:10px;color:var(--gray);margin-top:2px">Installed ' + new Date(s.date).toLocaleDateString() + '</div></div>' +
+      '<span style="font-size:9px;font-family:Syne,sans-serif;font-weight:700;padding:4px 12px;border-radius:100px;background:rgba(123,63,160,.1);color:#7B3FA0">Active</span></div>'
+    ).join('') + '</div>';
+}
+
+/* ── Skill Tabs & Upload ── */
+function switchSkillTab(btn, tab) {
+  document.querySelectorAll('.sk-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sk-installed').style.display = tab === 'installed' ? '' : 'none';
+  document.getElementById('sk-upload').style.display = tab === 'upload' ? '' : 'none';
+  if (tab === 'installed') renderSkills();
+}
+
+let skSelectedCat = null;
+
+function selSkCat(btn) {
+  document.querySelectorAll('#skCatRow .ep-tag-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  skSelectedCat = btn.dataset.cat;
+}
+
+function setSkPricing(btn, type) {
+  document.querySelectorAll('.sk-price-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const row = document.getElementById('skPriceRow');
+  if (type === 'free') { row.style.opacity = '.35'; row.style.pointerEvents = 'none'; }
+  else { row.style.opacity = '1'; row.style.pointerEvents = ''; }
+  updateSkEarn();
+}
+
+function updateSkEarn() {
+  const price = parseFloat(document.getElementById('skPrice').value) || 0;
+  document.getElementById('skEarnAmt').textContent = '$' + (price * 0.85).toFixed(2);
+}
+
+function handleSkillFiles(files) {
+  const container = document.getElementById('skUploadedFiles');
+  Array.from(files).forEach(file => {
+    const ext = file.name.split('.').pop().toUpperCase();
+    const size = (file.size / 1024 / 1024).toFixed(1);
+    const icons = {PNG:'\u{1F5BC}',JPG:'\u{1F4F7}',SVG:'\u{270F}',PDF:'\u{1F4C4}',ZIP:'\u{1F4E6}',FIG:'\u{1F3A8}'};
+    const icon = icons[ext] || '\u{1F4C1}';
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:#fafafa';
+    div.innerHTML = '<div style="width:36px;height:36px;border-radius:6px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">' + icon + '</div>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + file.name + '</div><div style="font-size:10px;color:var(--gray)">' + size + ' MB</div></div>' +
+      '<button style="background:none;border:none;cursor:pointer;color:#bbb;font-size:14px;padding:0 4px" onclick="this.parentElement.remove()">\u2715</button>';
+    container.appendChild(div);
+  });
+  // Update drop zone to show success
+  const dz = document.getElementById('skDropZone');
+  dz.style.borderColor = '#1A7A3C';
+}
+
+function resetSkillUpload() {
+  document.getElementById('skTitle').value = '';
+  document.getElementById('skDesc').value = '';
+  document.getElementById('skPrice').value = '49';
+  document.getElementById('skUploadedFiles').innerHTML = '';
+  document.getElementById('skDropZone').style.borderColor = '';
+  document.querySelectorAll('#skCatRow .ep-tag-btn').forEach(b => b.classList.remove('active'));
+  skSelectedCat = null;
+  updateSkEarn();
+}
+
+function publishSkill() {
+  const title = document.getElementById('skTitle').value.trim();
+  if (!title) { document.getElementById('skTitle').style.borderColor = '#E8001A'; document.getElementById('skTitle').focus(); return; }
+  const price = '$' + (document.getElementById('skPrice').value || '49');
+  ArtState.installSkill({ name: title, price: price, by: 'you', category: skSelectedCat || 'General' });
+  resetSkillUpload();
+  // Switch to installed tab
+  const tabs = document.querySelectorAll('.sk-tab');
+  switchSkillTab(tabs[0], 'installed');
+  aiReply('Skill "<strong>' + title + '</strong>" published to the Skill Vault \u2713');
+}
+
+/* Upload */
+function openUpload()  { document.getElementById('uploadModal').style.display = 'flex'; }
+function closeUpload() { document.getElementById('uploadModal').style.display = 'none'; }
+
+/* Add section */
+function addSection() {
+  const name = prompt('New section name:');
+  if (name) aiReply(`New section "<strong>${name}</strong>" created! Upload your first work to populate it.`);
+}
+
+/* AI */
+function sendAI() {
+  const inp = document.getElementById('aiInp');
+  const txt = inp.value.trim(); if (!txt) return;
+  inp.value = '';
+  const msgs = document.getElementById('aiMsgs');
+  msgs.innerHTML += `<div class="ai-msg u"><div class="ai-bub u">${txt}</div></div>`;
+  setTimeout(() => { aiReply(genReply(txt)); }, 900);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function aiReply(txt) {
+  const msgs = document.getElementById('aiMsgs');
+  msgs.innerHTML += `<div class="ai-msg"><div class="ai-bub ai">${txt}</div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function genReply(t) {
+  t = t.toLowerCase();
+  if (t.includes('post')||t.includes('upload')) return 'Done ✓ — Work posted. Want me to create a Gallery listing for it too?';
+  if (t.includes('gallery')||t.includes('list')||t.includes('sell')) return 'Suggested price: <strong>$129</strong>. Description: "A complete visual identity system including logo, color, type, and templates." Should I publish?';
+  if (t.includes('analytic')||t.includes('stats')||t.includes('top')) return 'Top work: <strong>Lumis Brand System</strong> — 12.4k views, $480 revenue. Follower growth is up 31% this month.';
+  if (t.includes('commission')||t.includes('email')) return '"Thanks for reaching out! My availability is 3–4 weeks out, starting at $2,500 for identity work. Can you share the scope?"';
+  if (t.includes('price')||t.includes('pricing')) return 'Your sweet spot is <strong>$89–$129</strong>. Listings at $129 convert 22% better than $199. AI Skills: $49–$69 gets the most installs.';
+  return 'On it! Anything specific you want me to focus on, or should I use your studio defaults?';
+}
+
+/* Marquee */
+const MQ = [
+  {txt:'Gallery',    bg:'#FFE500',tc:'#0a0a0a',p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#1B4FE8',tc:'#fff',   p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#1A7A3C',tc:'#fff',    p:'artroom-create.html'},
+  {txt:'Gallery',    bg:'#7B3FA0',tc:'#fff',    p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#FF5F1F',tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#FFB3C6',tc:'#0a0a0a', p:'artroom-create.html'},
+];
+const chunk = MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
+document.getElementById('marqTrack').innerHTML = chunk+chunk;
+function goTo(p){window.location.href=p;}
+
+/* ═══ PERSISTENT STATE ═══ */
+
+/* Show saved & purchased items as extra works */
+(function loadUserItems() {
+  const saves = ArtState.getSaves();
+  const purchases = ArtState.getPurchases();
+  const allItems = [...purchases, ...saves.filter(s => !purchases.some(p => p.title === s.title))];
+  if (!allItems.length) return;
+
+  const strip = document.getElementById('ws1');
+  const addBtn = strip.querySelector('.add-th');
+  const colors = ['#FFB3C6','#1B4FE8','#FFE500','#1A7A3C','#FF5F1F','#7B3FA0','#E8001A','#00A896'];
+
+  allItems.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'wthumb';
+    const bg = item.color || colors[i % colors.length];
+    d.innerHTML = `<div class="wt-img" style="background:${bg}">${ARTS[i % ARTS.length]}</div><div class="wt-lbl">${item.title}</div><div class="wt-ov">Open ↗</div>`;
+    strip.insertBefore(d, addBtn);
+  });
+
+  /* Update stats */
+  const totalWorks = document.querySelectorAll('.wthumb').length;
+  const statsEl = document.querySelector('.stat-val');
+  const followCount = ArtState.getFollows().length;
+})();
+
+/* Show installed skills count in AI assistant header */
+(function showSkillCount() {
+  const skills = ArtState.getSkills();
+  if (!skills.length) return;
+  const aiHead = document.querySelector('.ai-header');
+  if (aiHead) {
+    const badge = document.createElement('span');
+    badge.style.cssText = 'font-size:9px;background:#1A7A3C;color:#fff;padding:2px 8px;border-radius:100px;margin-left:auto;font-family:Syne,sans-serif;font-weight:700;letter-spacing:.06em';
+    badge.textContent = skills.length + ' SKILL' + (skills.length > 1 ? 'S' : '');
+    aiHead.style.display = 'flex'; aiHead.style.alignItems = 'center';
+    aiHead.appendChild(badge);
+  }
+})();
+
+/* Upload modal — real file preview + publish to state */
+(function wireUpload() {
+  const dropZone = document.querySelector('#uploadModal .drop-zone');
+  const titleInp = document.querySelector('#uploadModal .modal-body input');
+  const publishBtn = document.querySelector('#uploadModal .apill.black');
+  let uploadedFile = null;
+
+  if (!dropZone) return;
+
+  /* Make drop zone clickable */
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file'; fileInput.accept = 'image/*,.pdf,.zip'; fileInput.style.display = 'none';
+  dropZone.appendChild(fileInput);
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', function() {
+    if (!this.files.length) return;
+    uploadedFile = this.files[0];
+    dropZone.innerHTML = `<div style="font-size:28px;margin-bottom:8px">✓</div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700">${uploadedFile.name}</div><div style="font-size:12px;color:#bbb">${(uploadedFile.size/1024/1024).toFixed(1)} MB</div>`;
+  });
+
+  /* Drag & drop */
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#0a0a0a'; });
+  dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = ''; });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.style.borderColor = '';
+    if (e.dataTransfer.files.length) {
+      uploadedFile = e.dataTransfer.files[0];
+      dropZone.innerHTML = `<div style="font-size:28px;margin-bottom:8px">✓</div><div style="font-family:Syne,sans-serif;font-size:14px;font-weight:700">${uploadedFile.name}</div><div style="font-size:12px;color:#bbb">${(uploadedFile.size/1024/1024).toFixed(1)} MB</div>`;
+    }
+  });
+
+  /* Publish button */
+  if (publishBtn) {
+    publishBtn.onclick = function() {
+      const title = titleInp ? titleInp.value.trim() : '';
+      if (!title) { titleInp.style.borderColor = '#E8001A'; titleInp.focus(); return; }
+      ArtState.addPurchase({ title: title, price: 'Draft', by: 'you' });
+      closeUpload();
+      /* Add to strip immediately */
+      const strip = document.getElementById('ws1');
+      const addBtn = strip.querySelector('.add-th');
+      const colors = ['#FFB3C6','#1B4FE8','#FFE500','#1A7A3C','#FF5F1F','#7B3FA0'];
+      const d = document.createElement('div');
+      d.className = 'wthumb';
+      d.innerHTML = `<div class="wt-img" style="background:${colors[Math.floor(Math.random()*colors.length)]}">${ARTS[Math.floor(Math.random()*ARTS.length)]}</div><div class="wt-lbl">${title}</div><div class="wt-ov">Open ↗</div>`;
+      strip.insertBefore(d, addBtn);
+      aiReply('Published "<strong>' + title + '</strong>" to your studio ✓');
+    };
+  }
+})();
+
+/* ── Edit Profile ── */
+let epSelectedBg = '#FFB3C6', epSelectedTc = '#0a0a0a', epSelectedTags = [], epAvatarImg = null;
+
+function openEditProfile() {
+  const p = ArtState.getProfile();
+  document.getElementById('epName').value = p.name || 'Maya Chen';
+  document.getElementById('epHandle').value = p.handle || 'maya';
+  document.getElementById('epBio').value = p.bio || '';
+  epSelectedBg = p.avatarBg || '#FFB3C6';
+  epSelectedTc = p.avatarTc || '#0a0a0a';
+  epSelectedTags = p.tags ? [...p.tags] : [];
+
+  epAvatarImg = p.avatarImg || null;
+  const av = document.getElementById('epAvatar');
+  const letter = (p.name || 'Maya Chen').charAt(0).toUpperCase();
+  if (epAvatarImg) {
+    av.style.backgroundImage = 'url(' + epAvatarImg + ')';
+    av.style.backgroundSize = 'cover';
+    av.style.backgroundPosition = 'center';
+    av.textContent = '';
+    document.getElementById('epRemovePhoto').style.display = '';
+  } else {
+    av.style.backgroundImage = '';
+    av.textContent = letter;
+    av.style.background = epSelectedBg;
+    av.style.color = epSelectedTc;
+    document.getElementById('epRemovePhoto').style.display = 'none';
+  }
+
+  document.querySelectorAll('.ep-swatch').forEach(s => {
+    s.style.borderColor = s.dataset.bg === epSelectedBg ? '#0a0a0a' : 'transparent';
+  });
+  document.querySelectorAll('.ep-tag-btn').forEach(b => {
+    b.classList.toggle('active', epSelectedTags.includes(b.dataset.tag));
+  });
+
+  document.getElementById('editProfileModal').style.display = 'flex';
+}
+function closeEditProfile() { document.getElementById('editProfileModal').style.display = 'none'; }
+
+function pickColor(el) {
+  epSelectedBg = el.dataset.bg;
+  epSelectedTc = el.dataset.tc;
+  const av = document.getElementById('epAvatar');
+  av.style.background = epSelectedBg;
+  av.style.color = epSelectedTc;
+  document.querySelectorAll('.ep-swatch').forEach(s => {
+    s.style.borderColor = s.dataset.bg === epSelectedBg ? '#0a0a0a' : 'transparent';
+  });
+}
+
+function handleAvatarUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 128; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      const min = Math.min(img.width, img.height);
+      const sx = (img.width - min) / 2;
+      const sy = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, 128, 128);
+      epAvatarImg = canvas.toDataURL('image/jpeg', 0.8);
+      const av = document.getElementById('epAvatar');
+      av.style.backgroundImage = 'url(' + epAvatarImg + ')';
+      av.style.backgroundSize = 'cover';
+      av.style.backgroundPosition = 'center';
+      av.textContent = '';
+      document.getElementById('epRemovePhoto').style.display = '';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeAvatarPhoto() {
+  epAvatarImg = null;
+  const av = document.getElementById('epAvatar');
+  av.style.backgroundImage = '';
+  const name = document.getElementById('epName').value.trim() || 'Maya Chen';
+  av.textContent = name.charAt(0).toUpperCase();
+  av.style.background = epSelectedBg;
+  av.style.color = epSelectedTc;
+  document.getElementById('epRemovePhoto').style.display = 'none';
+}
+
+function toggleEpTag(btn) {
+  const tag = btn.dataset.tag;
+  const idx = epSelectedTags.indexOf(tag);
+  if (idx > -1) { epSelectedTags.splice(idx, 1); btn.classList.remove('active'); }
+  else { epSelectedTags.push(tag); btn.classList.add('active'); }
+}
+
+function saveProfile() {
+  const name = document.getElementById('epName').value.trim() || 'Maya Chen';
+  const handle = document.getElementById('epHandle').value.trim() || 'maya';
+  const bio = document.getElementById('epBio').value.trim();
+  const data = { name, handle, bio, avatarBg: epSelectedBg, avatarTc: epSelectedTc, avatarImg: epAvatarImg, tags: epSelectedTags };
+  ArtState.setProfile(data);
+
+  // Update sidebar
+  const sav = document.querySelector('.s-av');
+  if (epAvatarImg) {
+    sav.textContent = '';
+    sav.style.backgroundImage = 'url(' + epAvatarImg + ')';
+    sav.style.backgroundSize = 'cover';
+    sav.style.backgroundPosition = 'center';
+  } else {
+    sav.style.backgroundImage = '';
+    sav.textContent = name.charAt(0).toUpperCase();
+    sav.style.background = epSelectedBg;
+    sav.style.color = epSelectedTc;
+  }
+  document.querySelector('.s-name').textContent = name;
+  document.querySelector('.s-handle').textContent = '@' + handle + '.artroom';
+
+  closeEditProfile();
+}
+
+/* Load saved profile on page load */
+(function loadProfile() {
+  const p = ArtState.getProfile();
+  if (!p.name) return;
+  const sav = document.querySelector('.s-av');
+  if (p.avatarImg) {
+    sav.textContent = '';
+    sav.style.backgroundImage = 'url(' + p.avatarImg + ')';
+    sav.style.backgroundSize = 'cover';
+    sav.style.backgroundPosition = 'center';
+  } else {
+    sav.textContent = p.name.charAt(0).toUpperCase();
+    if (p.avatarBg) {
+      sav.style.background = p.avatarBg;
+      sav.style.color = p.avatarTc || '#fff';
+    }
+  }
+  document.querySelector('.s-name').textContent = p.name;
+  document.querySelector('.s-handle').textContent = '@' + (p.handle || 'maya') + '.artroom';
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "artroom-dev",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "cd /tmp/artroom && /usr/bin/ruby -e \"require 'webrick';s=WEBrick::HTTPServer.new(Port:3000,DocumentRoot:'/tmp/artroom',Logger:WEBrick::Log.new(\\$stdout),AccessLog:[]);trap('INT'){s.shutdown};s.start\""],
+      "port": 3000
+    }
+  ]
+}

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArtRoom — Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="state.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--nav-h:56px;--bar-h:50px}
+body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);background:#fff;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-back{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;color:var(--black);text-decoration:none;display:flex;align-items:center;gap:6px;padding:4px 2px;transition:opacity .2s}
+.nav-back:hover{opacity:.45}
+.nav-search{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);transition:all .2s}
+.nav-search:hover{border-color:var(--black);background:#f5f5f5}
+.nav-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--black);cursor:pointer;text-decoration:none;display:block;text-align:center}
+.nav-right{display:flex;justify-content:flex-end;align-items:flex-end}
+.sign-wrap{display:flex;flex-direction:column;align-items:center}
+.sign-chain{display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:5px}
+.chain-link{width:7px;height:4px;border:1.5px solid #ccc;border-radius:50%}
+.chain-link:nth-child(odd){transform:rotate(90deg)}
+.sign-board{display:block;text-align:center;padding:8px 18px 10px;border:1.5px solid var(--black);border-radius:7px;background:#fff;cursor:pointer;transform-origin:top center;animation:signRock 3.8s ease-in-out infinite;user-select:none;min-width:118px;position:relative}
+.sign-board::before{content:'';position:absolute;top:-2px;left:14px;right:14px;height:5px;background:#fff;z-index:1}
+.sign-text{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--black);display:block;line-height:1}
+.sign-sub{font-family:'DM Sans',sans-serif;font-size:8px;font-weight:300;letter-spacing:.13em;text-transform:uppercase;color:#bbb;display:block;margin-top:4px;line-height:1}
+.sign-dots{display:flex;justify-content:center;gap:4px;margin-top:7px}
+.sign-dot{width:4px;height:4px;border-radius:50%;background:var(--black)}
+@keyframes signRock{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.page{padding-top:var(--nav-h);padding-bottom:var(--bar-h)}
+.hero{padding:52px 28px 40px;border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,56px);font-weight:800;letter-spacing:-.03em;margin-bottom:10px}
+.hero-sub{font-size:14px;font-weight:300;color:var(--gray);max-width:400px;line-height:1.7}
+.hero-stats{display:flex;gap:32px}
+.hs-n{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;display:block;letter-spacing:-.02em}
+.hs-l{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gray)}
+.filter-bar{padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.fpill{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:7px 16px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .2s,transform .15s}
+.fpill:hover{opacity:.78}
+.fpill:active{transform:scale(.95)}
+.fpill.dim{opacity:.28}
+.sort-sel{margin-left:auto;flex-shrink:0;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;padding:7px 14px;border-radius:100px;border:1px solid var(--border);background:#fff;cursor:pointer;appearance:none}
+.sec-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#bbb;padding:28px 28px 16px;display:flex;align-items:center;gap:14px}
+.sec-label::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.feat-row{padding:0 28px 28px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.feat-row{grid-template-columns:1fr}}
+.fb{border-radius:10px;overflow:hidden;border:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;cursor:pointer;transition:transform .25s,box-shadow .25s}
+.fb:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.1)}
+.fb-vis{display:flex;align-items:center;justify-content:center;min-height:180px}
+.fb-vis svg{width:100%;height:100%}
+.fb-info{padding:22px;display:flex;flex-direction:column;justify-content:space-between;border-left:1px solid var(--border)}
+.fb-tag{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px}
+.fb-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;line-height:1.25;margin-bottom:7px}
+.fb-desc{font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:14px}
+.fb-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.fb-btn{display:inline-block;margin-top:10px;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;padding:9px 20px;border-radius:100px;border:none;cursor:pointer}
+.fb-btn:hover{background:#333}
+.g-wrap{padding:0 28px 20px}
+.g-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.g-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.g-grid{grid-template-columns:repeat(2,1fr)}}
+.gc{border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .2s;opacity:0;transform:translateY(14px);background:#fff}
+.gc.vis{opacity:1;transform:translateY(0)}
+.gc:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.1);border-color:#ccc}
+.gc:hover .gc-buy{opacity:1;transform:translateX(-50%) translateY(0)}
+.gc-th{width:100%;position:relative;overflow:hidden}
+.gc-th svg{width:100%;height:100%;display:block;transition:transform .4s}
+.gc:hover .gc-th svg{transform:scale(1.04)}
+.gc-buy{position:absolute;bottom:10px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;padding:8px 20px;border-radius:100px;white-space:nowrap;opacity:0;transition:opacity .2s,transform .2s;border:none;cursor:pointer}
+.gc-info{padding:13px 13px 15px}
+.gc-title{font-size:13px;font-weight:400;color:#111;margin-bottom:6px;line-height:1.3}
+.gc-row{display:flex;align-items:center;justify-content:space-between}
+.gc-by{font-size:11px;color:#bbb}
+.gc-price{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.gc-tag{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:100px;margin-top:8px;display:inline-block}
+
+/* ══════════════════════════════
+   PAYMENT MODAL
+══════════════════════════════ */
+.pay-overlay{position:fixed;inset:0;z-index:1000;background:rgba(10,10,10,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.pay-overlay.open{opacity:1;pointer-events:all}
+.pay-modal{background:#fff;border-radius:20px;width:420px;max-width:calc(100vw - 32px);box-shadow:0 24px 80px rgba(0,0,0,.18);overflow:hidden;transform:translateY(16px) scale(.97);transition:transform .28s cubic-bezier(.34,1.56,.64,1),opacity .25s;opacity:0;position:relative}
+.pay-overlay.open .pay-modal{transform:translateY(0) scale(1);opacity:1}
+.pay-header{padding:22px 24px 18px;border-bottom:1px solid #f0f0f0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.pay-item-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#111;line-height:1.25;margin-bottom:4px}
+.pay-item-by{font-size:11px;color:#bbb}
+.pay-price-tag{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#0a0a0a;flex-shrink:0}
+.pay-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;background:#f5f5f5;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:#888;transition:background .15s;z-index:2}
+.pay-close:hover{background:#e8e8e8}
+.pay-body{padding:20px 24px 24px}
+.pay-methods{display:flex;gap:5px;margin-bottom:20px;background:#f5f5f5;padding:4px;border-radius:12px}
+.pay-method-btn{flex:1;padding:9px 4px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:all .18s;background:transparent;color:#999;display:flex;align-items:center;justify-content:center;gap:5px}
+.pay-method-btn.active{background:#fff;color:#0a0a0a;box-shadow:0 2px 8px rgba(0,0,0,.09)}
+.pay-panel{display:none}
+.pay-panel.active{display:block}
+.apple-pay-btn{width:100%;padding:16px;background:#000;color:#fff;border:none;border-radius:13px;cursor:pointer;font-size:19px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,background .15s;font-family:-apple-system,sans-serif}
+.apple-pay-btn:hover{background:#1a1a1a;transform:scale(.99)}
+.apple-pay-btn:active{transform:scale(.97)}
+.pay-divider{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:11px;color:#ccc}
+.pay-divider::before,.pay-divider::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.pay-field{margin-bottom:14px}
+.pay-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;display:block;margin-bottom:6px}
+.pay-input{width:100%;padding:11px 14px;border:1.5px solid #e8e8e8;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:#111;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff}
+.pay-input:focus{border-color:#0a0a0a;box-shadow:0 0 0 3px rgba(10,10,10,.06)}
+.pay-input::placeholder{color:#ccc}
+.pay-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.usdc-wrap{background:#f8f8f8;border-radius:12px;padding:16px;margin-bottom:14px;border:1.5px dashed #e0e0e0}
+.usdc-label-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.usdc-logo{width:28px;height:28px;border-radius:50%;background:#2775CA;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:7px;font-weight:700;color:#fff;flex-shrink:0;line-height:1.2;text-align:center}
+.usdc-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#111}
+.usdc-sub{font-size:10px;color:#bbb}
+.usdc-amount{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:#111;margin-bottom:10px}
+.usdc-amount span{font-size:13px;color:#999}
+.usdc-addr{font-family:'DM Mono',monospace;font-size:10px;color:#666;background:#fff;padding:8px 12px;border-radius:8px;border:1px solid #e8e8e8;word-break:break-all;line-height:1.6;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.usdc-copy{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;padding:5px 12px;border-radius:100px;border:1.5px solid #e0e0e0;background:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;color:#444}
+.usdc-copy:hover{background:#0a0a0a;color:#fff;border-color:#0a0a0a}
+.usdc-networks{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.usdc-network{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.08em;padding:4px 10px;border-radius:100px;border:1.5px solid #e0e0e0;color:#666;cursor:pointer;transition:all .18s}
+.usdc-network.active-net{background:#2775CA;color:#fff;border-color:#2775CA}
+.usdc-fee-note{font-size:11px;color:#bbb;margin-top:10px;line-height:1.6;text-align:center}
+.pay-submit{width:100%;margin-top:18px;padding:15px;background:#0a0a0a;color:#fff;border:none;border-radius:13px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.pay-submit:hover{background:#333;transform:translateY(-1px)}
+.pay-success{display:none;text-align:center;padding:36px 24px 32px}
+.pay-success-icon{font-size:52px;margin-bottom:16px}
+.pay-success-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.pay-success-sub{font-size:13px;color:#888;line-height:1.65;margin-bottom:22px}
+.pay-success-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;padding:12px 28px;border-radius:100px;background:#0a0a0a;color:#fff;border:none;cursor:pointer}
+
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--bar-h);background:#fff;border-top:1px solid var(--border);overflow:hidden;display:flex;align-items:center}
+.marq-track{display:flex;align-items:center;animation:marqRoll 20s linear infinite;white-space:nowrap;will-change:transform}
+.marq-track:hover{animation-play-state:paused}
+@keyframes marqRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mq-item{display:inline-flex;align-items:center;gap:22px;padding:0 22px}
+.mq-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:8px 22px;border-radius:100px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
+.mq-btn:hover{opacity:.8;transform:scale(.96)}
+.mq-dot{color:#ddd;font-size:20px;user-select:none}
+.toast{position:fixed;bottom:68px;right:28px;z-index:500;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:12px 22px;border-radius:100px;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ══ SEARCH OVERLAY ══ */
+.search-overlay{position:fixed;inset:0;z-index:600;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);display:none;flex-direction:column;align-items:center;padding-top:min(18vh,140px)}
+.search-overlay.open{display:flex}
+.search-box{width:min(560px,90vw);position:relative}
+.search-big{width:100%;font-family:'Syne',sans-serif;font-size:clamp(22px,4vw,36px);font-weight:700;border:none;border-bottom:2px solid var(--black);background:transparent;outline:none;padding:12px 0;color:var(--black);letter-spacing:-.02em}
+.search-big::placeholder{color:#ccc}
+.search-close-btn{position:absolute;right:0;top:50%;transform:translateY(-50%);background:none;border:1px solid var(--border);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--gray);transition:all .2s}
+.search-close-btn:hover{border-color:var(--black);color:var(--black)}
+.search-hint{font-size:11px;color:#bbb;margin-top:10px;font-family:'DM Sans',sans-serif}
+.search-results{width:min(560px,90vw);margin-top:24px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.search-result{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:background .15s}
+.search-result:hover{background:rgba(0,0,0,.05)}
+.sr-color{width:42px;height:42px;border-radius:8px;flex-shrink:0}
+.sr-info{flex:1;min-width:0}
+.sr-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-by{font-size:11px;color:#bbb;margin-top:2px}
+.sr-price{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;flex-shrink:0}
+.sr-tag{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:100px;flex-shrink:0}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="window.location.href='artroom-home.html'">← Discover</button>
+    <button class="nav-search"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+  </div>
+  <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
+  <div class="nav-right">
+    <div class="sign-wrap">
+      <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
+      <div class="sign-board" onclick="goTo('artroom-studio.html')">
+        <span class="sign-text">Open Studio</span><span class="sign-sub">Enter your space</span>
+        <div class="sign-dots"><div class="sign-dot"></div><div class="sign-dot"></div><div class="sign-dot"></div></div>
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="page">
+  <div class="hero">
+    <div>
+      <div class="hero-title">Gallery</div>
+      <div class="hero-sub">Buy premium designs, UI kits, brand systems, and templates from independent creators.</div>
+    </div>
+    <div class="hero-stats">
+      <div><span class="hs-n">4,200+</span><span class="hs-l">Designs</span></div>
+      <div><span class="hs-n">$3–$299</span><span class="hs-l">Prices</span></div>
+      <div><span class="hs-n">1,800</span><span class="hs-l">Creators</span></div>
+    </div>
+  </div>
+  <div class="sec-label">Featured Packs</div>
+  <div class="feat-row" id="featRow"></div>
+  <div class="filter-bar">
+    <button class="fpill" style="background:#0a0a0a;color:#fff" data-tag="all" onclick="filt(this)">All Designs</button>
+    <button class="fpill" style="background:#FFB3C6;color:#0a0a0a" data-tag="brand" onclick="filt(this)">Branding</button>
+    <button class="fpill" style="background:#1B4FE8;color:#fff" data-tag="ui" onclick="filt(this)">UI Kits</button>
+    <button class="fpill" style="background:#FFE500;color:#0a0a0a" data-tag="type" onclick="filt(this)">Typography</button>
+    <button class="fpill" style="background:#1A7A3C;color:#fff" data-tag="illus" onclick="filt(this)">Illustration</button>
+    <button class="fpill" style="background:#FF5F1F;color:#fff" data-tag="motion" onclick="filt(this)">Motion</button>
+    <button class="fpill" style="background:#7B3FA0;color:#fff" data-tag="3d" onclick="filt(this)">3D</button>
+    <select class="sort-sel"><option>Most Popular</option><option>Newest</option><option>Price: Low–High</option><option>Price: High–Low</option></select>
+  </div>
+  <div class="sec-label">All Designs</div>
+  <div class="g-wrap"><div class="g-grid" id="gGrid"></div></div>
+</div>
+<div class="bottom-bar"><div class="marq-track" id="marqTrack"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const ITEMS=[
+  {color:'#FFB3C6',tc:'#0a0a0a',title:'Lumis Brand Kit',by:'maya',tag:'brand',price:'$129',h:200,isnew:true},
+  {color:'#1B4FE8',tc:'#fff',title:'Dashboard System v3',by:'james',tag:'ui',price:'$89',h:180,isnew:false},
+  {color:'#FFE500',tc:'#0a0a0a',title:'Forma Typeface',by:'theo',tag:'type',price:'$49',h:220,isnew:true},
+  {color:'#1A7A3C',tc:'#fff',title:'Green Field Illustrations',by:'leo',tag:'illus',price:'$39',h:190,isnew:false},
+  {color:'#E8001A',tc:'#fff',title:'Signal Motion Pack',by:'rin',tag:'motion',price:'$79',h:200,isnew:true},
+  {color:'#7B3FA0',tc:'#fff',title:'Void 3D Object Library',by:'seb',tag:'3d',price:'$149',h:180,isnew:false},
+  {color:'#FF5F1F',tc:'#fff',title:'Heat Poster Series',by:'kai',tag:'illus',price:'$29',h:210,isnew:false},
+  {color:'#00A896',tc:'#fff',title:'Coastal UI Kit',by:'lara',tag:'ui',price:'$69',h:195,isnew:false},
+  {color:'#A8E63D',tc:'#0a0a0a',title:'Growth Dashboard UI',by:'noa',tag:'ui',price:'$99',h:180,isnew:true},
+  {color:'#0D1B4B',tc:'#fff',title:'Night Atlas Brand Pack',by:'arc',tag:'brand',price:'$109',h:210,isnew:false},
+  {color:'#C8375B',tc:'#fff',title:'Cut & Fold Type Set',by:'rosa',tag:'type',price:'$44',h:190,isnew:false},
+  {color:'#E8D5B0',tc:'#0a0a0a',title:'Warm Editorial System',by:'emi',tag:'brand',price:'$89',h:200,isnew:false},
+];
+const FEAT=[
+  {color:'#1B4FE8',tc:'#fff',title:'Stellar UI System',by:'james',tag:'UI Kit',price:'$199',desc:'200+ components, dark + light, Figma & CSS variables included.',tagColor:'#1B4FE8'},
+  {color:'#7B3FA0',tc:'#fff',title:'3D Icon Library Pro',by:'mia',tag:'3D',price:'$149',desc:'600 fully rendered 3D icons, multiple styles, transparent PNGs.',tagColor:'#7B3FA0'},
+];
+const ARTS=[
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><path d="M20 150 Q80 50 130 100 Q180 150 240 50" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/><rect x="80" y="80" width="60" height="40" fill="rgba(255,80,80,.28)" rx="2"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><circle cx="130" cy="100" r="60" fill="rgba(255,255,255,.08)"/><line x1="40" y1="100" x2="220" y2="100" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/><line x1="130" y1="25" x2="130" y2="175" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><text x="10" y="170" font-family="Georgia,serif" font-size="170" font-weight="900" fill="rgba(0,0,0,.1)">A</text></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><rect x="30" y="60" width="30" height="120" fill="rgba(255,255,255,.18)" rx="2"/><rect x="76" y="40" width="30" height="140" fill="rgba(255,255,255,.22)" rx="2"/><rect x="122" y="20" width="30" height="160" fill="rgba(255,255,255,.26)" rx="2"/><rect x="168" y="50" width="30" height="130" fill="rgba(255,255,255,.18)" rx="2"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><path d="M0 130 Q42 90 84 130 Q126 170 168 130 Q210 90 260 130" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none"/><path d="M0 155 Q42 115 84 155 Q126 195 168 155 Q210 115 260 155" stroke="rgba(255,255,255,.2)" stroke-width="1.5" fill="none"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><ellipse cx="130" cy="100" rx="76" ry="76" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><ellipse cx="130" cy="100" rx="76" ry="28" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/><ellipse cx="130" cy="100" rx="28" ry="76" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><defs><pattern id="hg" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="20" fill="rgba(255,255,255,.12)"/></pattern></defs><rect width="260" height="200" fill="url(#hg)"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><circle cx="130" cy="100" r="55" fill="rgba(255,255,255,.1)"/><circle cx="130" cy="100" r="32" fill="rgba(255,255,255,.08)"/><circle cx="130" cy="100" r="10" fill="rgba(255,255,255,.18)"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><polygon points="130,20 220,170 40,170" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="2"/><polygon points="130,20 220,170 130,108" fill="rgba(255,255,255,.1)"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><text x="130" y="120" text-anchor="middle" font-family="Georgia,serif" font-size="56" fill="rgba(255,255,255,.14)">Aa</text></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><circle cx="130" cy="80" r="3.5" fill="rgba(255,255,255,.9)"/><circle cx="80" cy="50" r="2.5" fill="rgba(255,255,255,.5)"/><circle cx="190" cy="65" r="3" fill="rgba(255,255,255,.6)"/><circle cx="60" cy="130" r="2" fill="rgba(255,255,255,.4)"/><line x1="130" y1="80" x2="80" y2="50" stroke="rgba(255,255,255,.1)" stroke-width="1"/><line x1="130" y1="80" x2="190" y2="65" stroke="rgba(255,255,255,.1)" stroke-width="1"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><text x="130" y="128" text-anchor="middle" font-family="Georgia,serif" font-size="58" fill="rgba(0,0,0,.12)">Aa</text><line x1="55" y1="148" x2="205" y2="148" stroke="rgba(0,0,0,.1)" stroke-width="1"/></svg>`,
+];
+const TAGBG={brand:'#FFB3C6',ui:'#1B4FE8',type:'#FFE500',illus:'#FF5F1F',motion:'#1A7A3C','3d':'#7B3FA0'};
+const TAGTC={brand:'#0a0a0a',ui:'#fff',type:'#0a0a0a',illus:'#fff',motion:'#fff','3d':'#fff'};
+
+// Featured
+const fr=document.getElementById('featRow');
+FEAT.forEach((f,i)=>{
+  fr.innerHTML+=`<div class="fb" onclick="addCart('${f.title}','${f.price}','${f.by}')">
+    <div class="fb-vis" style="background:${f.color}">${ARTS[(i+1)%ARTS.length]}</div>
+    <div class="fb-info">
+      <div><div class="fb-tag" style="color:${f.tagColor}">${f.tag}</div><div class="fb-title">${f.title}</div><div class="fb-desc">${f.desc}</div></div>
+      <div><div class="fb-price">${f.price}</div><button class="fb-btn" onclick="event.stopPropagation();addCart('${f.title}','${f.price}','${f.by}')">Buy Now →</button></div>
+    </div>
+  </div>`;
+});
+
+// Grid
+const gg=document.getElementById('gGrid');
+ITEMS.forEach((d,i)=>{
+  const el=document.createElement('div');
+  el.className='gc'; el.dataset.tag=d.tag;
+  el.style.transitionDelay=`${(i%4)*0.06}s`;
+  el.innerHTML=`
+    <div class="gc-th" style="height:${d.h}px;background:${d.color}">${ARTS[i%ARTS.length]}
+      <button class="gc-buy" onclick="event.stopPropagation();addCart('${d.title}','${d.price}','${d.by}')">Add to Cart →</button>
+    </div>
+    <div class="gc-info">
+      <div class="gc-title">${d.title}${d.isnew?' <span style="font-family:Syne,sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;background:#E8001A;color:#fff;padding:2px 7px;border-radius:100px;vertical-align:middle">NEW</span>':''}</div>
+      <div class="gc-row"><a class="gc-by" href="${d.by === 'maya' ? 'artroom-studio.html' : 'artroom-artist.html?handle=' + d.by}" onclick="event.stopPropagation()" style="text-decoration:none;color:inherit">${d.by}.artroom</a><span class="gc-price">${d.price}</span></div>
+      <span class="gc-tag" style="background:${TAGBG[d.tag]};color:${TAGTC[d.tag]}">${d.tag}</span>
+    </div>`;
+  el.addEventListener('click',()=>addCart(d.title));
+  gg.appendChild(el);
+  setTimeout(()=>el.classList.add('vis'),(i%4)*60+200);
+});
+
+function filt(btn){
+  const tag=btn.dataset.tag;
+  document.querySelectorAll('.fpill').forEach(p=>tag==='all'?p.classList.remove('dim'):p.classList.add('dim'));
+  if(tag!=='all')btn.classList.remove('dim');
+  document.querySelectorAll('.gc').forEach(el=>{el.style.display=(tag==='all'||el.dataset.tag===tag)?'':'none';});
+}
+
+function addCart(name,price,by){openPay(name,price||'$49',by||'artroom');}
+
+/* ─────────────────────────────
+   PAYMENT MODAL
+───────────────────────────── */
+let _payItem='',_payPrice='',_payBy='';
+function openPay(name,price,by){
+  _payItem=name;_payPrice=price;_payBy=by||'artroom';
+  const amt=price.replace('$','');
+  document.getElementById('payItemName').textContent=name;
+  document.getElementById('payItemBy').textContent=_payBy+'.artroom';
+  document.getElementById('payPriceTag').textContent=price;
+  document.getElementById('usdcAmount').innerHTML=amt+'.00 <span>USDC</span>';
+  document.getElementById('payBtnAmt').textContent=price;
+  document.getElementById('paySuccess').style.display='none';
+  document.getElementById('payBody').style.display='';
+  setPayMethod('apple',document.querySelector('.pay-method-btn'));
+  document.getElementById('payOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closePay(){
+  document.getElementById('payOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function setPayMethod(m,btn){
+  document.querySelectorAll('.pay-method-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.pay-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+m).classList.add('active');
+}
+function setNet(el,net){
+  document.querySelectorAll('.usdc-network').forEach(n=>n.classList.remove('active-net'));
+  el.classList.add('active-net');
+  const a={Ethereum:'0x3fA8B2c9...d4E2',Solana:'7hXp9mNr...mK3R',Base:'0x9Bc2aF71...c881',Polygon:'0x5Ef1bD34...f220'};
+  document.getElementById('usdcAddr').textContent=a[net];
+}
+function copyAddr(){
+  const btn=document.getElementById('usdcCopyBtn');
+  btn.textContent='Copied ✓';setTimeout(()=>btn.textContent='Copy',2000);
+}
+function fmtCard(inp){let v=inp.value.replace(/\D/g,'').slice(0,16);inp.value=v.replace(/(\d{4})(?=\d)/g,'$1 ');}
+function fmtExp(inp){let v=inp.value.replace(/\D/g,'').slice(0,4);if(v.length>=2)v=v.slice(0,2)+' / '+v.slice(2);inp.value=v;}
+function submitPay(){
+  document.getElementById('payBody').style.display='none';
+  document.getElementById('paySuccess').style.display='block';
+  document.getElementById('paySuccessItem').textContent=_payItem;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePay();});
+
+const MQ=[
+  {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
+  {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
+];
+const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
+document.getElementById('marqTrack').innerHTML=ch+ch;
+function goTo(p){window.location.href=p;}
+</script><!-- ═══ PAYMENT MODAL ═══ -->
+<div class="pay-overlay" id="payOverlay" onclick="if(event.target===this)closePay()">
+  <div class="pay-modal">
+    <button class="pay-close" onclick="closePay()">✕</button>
+    <div class="pay-header">
+      <div>
+        <div class="pay-item-name" id="payItemName">Item</div>
+        <div class="pay-item-by" id="payItemBy">creator.artroom</div>
+      </div>
+      <div class="pay-price-tag" id="payPriceTag">$49</div>
+    </div>
+    <div class="pay-body" id="payBody">
+      <div class="pay-methods">
+        <button class="pay-method-btn active" onclick="setPayMethod('apple',this)"><span>&#xF8FF;</span> Apple Pay</button>
+        <button class="pay-method-btn" onclick="setPayMethod('usdc',this)">◎ USDC</button>
+        <button class="pay-method-btn" onclick="setPayMethod('card',this)">▦ Card</button>
+      </div>
+      <div class="pay-panel active" id="panel-apple">
+        <button class="apple-pay-btn" onclick="submitPay()"><span>&#xF8FF;</span> Pay</button>
+        <div class="pay-divider">or pay another way</div>
+        <p style="font-size:12px;color:#bbb;text-align:center;line-height:1.7">Apple Pay uses Face ID or Touch ID.<br>No card details entered manually.</p>
+      </div>
+      <div class="pay-panel" id="panel-usdc">
+        <div class="usdc-wrap">
+          <div class="usdc-label-row">
+            <div class="usdc-logo">USD<br>C</div>
+            <div><div class="usdc-title">Pay with USDC</div><div class="usdc-sub">Stablecoin · Instant · Near-zero fees</div></div>
+          </div>
+          <div class="usdc-amount" id="usdcAmount">49.00 <span>USDC</span></div>
+          <div class="usdc-addr"><span id="usdcAddr">0x3fA8B2c9...d4E2</span><button class="usdc-copy" id="usdcCopyBtn" onclick="copyAddr()">Copy</button></div>
+          <div class="usdc-networks">
+            <span class="usdc-network active-net" onclick="setNet(this,'Ethereum')">Ethereum</span>
+            <span class="usdc-network" onclick="setNet(this,'Solana')">Solana</span>
+            <span class="usdc-network" onclick="setNet(this,'Base')">Base</span>
+            <span class="usdc-network" onclick="setNet(this,'Polygon')">Polygon</span>
+          </div>
+        </div>
+        <p class="usdc-fee-note">Send exactly the amount shown · confirms in ~10s on Solana or Base</p>
+        <button class="pay-submit" onclick="submitPay()">I've Sent the Payment →</button>
+      </div>
+      <div class="pay-panel" id="panel-card">
+        <div class="pay-field"><label class="pay-label">Card Number</label><input class="pay-input" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"></div>
+        <div class="pay-row">
+          <div class="pay-field"><label class="pay-label">Expiry</label><input class="pay-input" placeholder="MM / YY" maxlength="7" oninput="fmtExp(this)"></div>
+          <div class="pay-field"><label class="pay-label">CVC</label><input class="pay-input" placeholder="•••" maxlength="4" type="password"></div>
+        </div>
+        <div class="pay-field"><label class="pay-label">Name on Card</label><input class="pay-input" placeholder="Your name"></div>
+        <button class="pay-submit" onclick="submitPay()"><span>Pay</span><span id="payBtnAmt">$49</span><span>→</span></button>
+      </div>
+    </div>
+    <div class="pay-success" id="paySuccess">
+      <div class="pay-success-icon">🎉</div>
+      <div class="pay-success-title">Payment successful!</div>
+      <p class="pay-success-sub">Your purchase is confirmed.<br><strong id="paySuccessItem"></strong> has been added to your Studio.</p>
+      <button class="pay-success-btn" onclick="closePay()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Gallery purchase persistence */
+const _origSubmitPay = submitPay;
+submitPay = function() {
+  _origSubmitPay();
+  if (_payItem) {
+    ArtState.addPurchase({ title: _payItem, price: _payPrice, by: _payBy });
+  }
+};
+
+/* Mark already-purchased items */
+document.querySelectorAll('.gi-card').forEach(card => {
+  const title = card.querySelector('.gi-title');
+  if (title && ArtState.hasPurchased(title.textContent)) {
+    const buy = card.querySelector('.gi-buy');
+    if (buy) { buy.textContent = 'Owned ✓'; buy.style.background = '#1A7A3C'; }
+  }
+});
+</script>
+
+<!-- Search overlay -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-box">
+    <input class="search-big" id="searchInput" placeholder="Search designs…" autocomplete="off">
+    <button class="search-close-btn" onclick="closeSearch()">✕</button>
+  </div>
+  <div class="search-hint">Search by title, artist, or tag — ⌘K to open anytime</div>
+  <div class="search-results" id="searchResults"></div>
+</div>
+
+<script>
+/* ── Gallery Search ── */
+const searchOverlay = document.getElementById('searchOverlay');
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+const allSearchable = [
+  ...FEAT.map(f => ({ title: f.title, by: f.by, tag: f.tag, price: f.price, color: f.color, tagColor: f.tagColor || TAGBG[f.tag] || '#999', tagTC: TAGTC[f.tag] || '#fff' })),
+  ...ITEMS.map(d => ({ title: d.title, by: d.by, tag: d.tag, price: d.price, color: d.color, tagColor: TAGBG[d.tag] || '#999', tagTC: TAGTC[d.tag] || '#fff' }))
+];
+
+function openSearch() {
+  searchOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  searchInput.value = '';
+  searchResults.innerHTML = '';
+  setTimeout(() => searchInput.focus(), 50);
+}
+function closeSearch() {
+  searchOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.querySelector('.nav-search').addEventListener('click', openSearch);
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+  if (e.key === 'Escape' && searchOverlay.classList.contains('open')) closeSearch();
+});
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) { searchResults.innerHTML = ''; return; }
+  const hits = allSearchable.filter(d =>
+    d.title.toLowerCase().includes(q) ||
+    d.by.toLowerCase().includes(q) ||
+    d.tag.toLowerCase().includes(q)
+  );
+  if (!hits.length) {
+    searchResults.innerHTML = '<div style="text-align:center;color:#bbb;padding:24px;font-size:13px">No results for "' + q.replace(/</g,'&lt;') + '"</div>';
+    return;
+  }
+  searchResults.innerHTML = hits.map(d => `
+    <div class="search-result" onclick="closeSearch();addCart('${d.title.replace(/'/g,"\\'")}','${d.price}','${d.by}')">
+      <div class="sr-color" style="background:${d.color}"></div>
+      <div class="sr-info">
+        <div class="sr-title">${d.title}</div>
+        <div class="sr-by">${d.by}.artroom</div>
+      </div>
+      <span class="sr-tag" style="background:${d.tagColor};color:${d.tagTC}">${d.tag}</span>
+      <div class="sr-price">${d.price}</div>
+    </div>
+  `).join('');
+});
+</script>
+</body>
+</html>

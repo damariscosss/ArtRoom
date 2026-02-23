@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArtRoom — Jobs</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="state.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--red:#E8001A;--nav-h:56px;--bar-h:50px}
+body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);background:#fff;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-back{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;color:var(--black);transition:opacity .2s}
+.nav-back:hover{opacity:.45}
+.nav-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--black);cursor:pointer;text-align:center;display:block}
+.nav-right{display:flex;justify-content:flex-end;align-items:flex-end}
+.sign-wrap{display:flex;flex-direction:column;align-items:center}
+.sign-chain{display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:5px}
+.chain-link{width:7px;height:4px;border:1.5px solid #ccc;border-radius:50%}
+.chain-link:nth-child(odd){transform:rotate(90deg)}
+.sign-board{text-align:center;padding:8px 18px 10px;border:1.5px solid var(--black);border-radius:7px;background:#fff;cursor:pointer;transform-origin:top center;animation:signRock 3.8s ease-in-out infinite;user-select:none;min-width:118px;position:relative}
+.sign-board::before{content:'';position:absolute;top:-2px;left:14px;right:14px;height:5px;background:#fff;z-index:1}
+.sign-text{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--black);display:block;line-height:1}
+.sign-sub{font-family:'DM Sans',sans-serif;font-size:8px;font-weight:300;letter-spacing:.13em;text-transform:uppercase;color:#bbb;display:block;margin-top:4px;line-height:1}
+.sign-dots{display:flex;justify-content:center;gap:4px;margin-top:7px}
+.sign-dot{width:4px;height:4px;border-radius:50%;background:var(--black)}
+@keyframes signRock{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+
+/* ── PAGE ── */
+.page{padding-top:var(--nav-h);padding-bottom:var(--bar-h)}
+
+/* ── HERO ── */
+.hero{padding:52px 28px 44px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+@media(max-width:800px){.hero{grid-template-columns:1fr}}
+.hero-eyebrow{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--red);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';width:24px;height:2px;background:var(--red);display:inline-block}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(30px,4.5vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin-bottom:14px}
+.hero-sub{font-size:14px;font-weight:300;color:var(--gray);line-height:1.75;max-width:460px;margin-bottom:28px}
+.hero-cta-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:12px 24px;border-radius:100px;border:none;cursor:pointer;transition:all .2s}
+.btn-black{background:var(--black);color:#fff}
+.btn-black:hover{background:#333;transform:translateY(-1px)}
+.btn-out{background:#fff;color:var(--black);border:1.5px solid var(--border)}
+.btn-out:hover{border-color:var(--black)}
+
+/* Hero right – animated talent cards */
+.hero-visual{position:relative;height:280px}
+.talent-float{position:absolute;display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.07);animation:floatCard 6s ease-in-out infinite alternate}
+.talent-float:nth-child(1){top:0;left:0;animation-delay:0s}
+.talent-float:nth-child(2){top:65px;right:0;animation-delay:1.2s;animation-duration:7s}
+.talent-float:nth-child(3){bottom:70px;left:20px;animation-delay:2.1s;animation-duration:5.5s}
+.talent-float:nth-child(4){bottom:0;right:30px;animation-delay:.7s;animation-duration:8s}
+@keyframes floatCard{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+.tf-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0}
+.tf-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#111;margin-bottom:2px}
+.tf-role{font-size:10px;color:var(--gray)}
+.tf-match{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:100px;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;margin-left:auto;flex-shrink:0}
+
+/* ── STATS BAR ── */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+.stat-cell{padding:24px 28px;border-right:1px solid var(--border);text-align:center}
+.stat-cell:last-child{border-right:none}
+.stat-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em;display:block;margin-bottom:4px}
+.stat-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray)}
+@media(max-width:700px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+
+/* ── FILTER / SEARCH BAR ── */
+.search-bar{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-input-wrap{position:relative;flex:1;min-width:200px}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#bbb;pointer-events:none}
+.search-input{width:100%;padding:10px 14px 10px 36px;border:1px solid var(--border);border-radius:100px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--black);outline:none;transition:border-color .2s,box-shadow .2s;background:#fafafa}
+.search-input:focus{border-color:var(--black);background:#fff;box-shadow:0 0 0 3px rgba(10,10,10,.05)}
+.fpill{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:7px 16px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .2s,transform .15s}
+.fpill:hover{opacity:.78}
+.fpill:active{transform:scale(.95)}
+.fpill.dim{opacity:.28}
+
+/* ── MAIN LAYOUT ── */
+.main-layout{display:grid;grid-template-columns:1fr 360px;gap:0;align-items:start}
+@media(max-width:1000px){.main-layout{grid-template-columns:1fr}}
+
+/* ── JOB LIST ── */
+.job-list{border-right:1px solid var(--border)}
+.job-list-header{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.jlh-count{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--gray);letter-spacing:.04em}
+.sort-select{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:#fff;cursor:pointer;appearance:none}
+
+.job-row{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;padding:22px 28px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;position:relative}
+.job-row:hover{background:#fafafa}
+.job-row.active{background:#fafafa;border-left:3px solid var(--black);padding-left:25px}
+.jr-logo{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--border);background:#fff}
+.jr-mid{min-width:0}
+.jr-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:-.01em;margin-bottom:3px;line-height:1.2}
+.jr-co{font-size:12px;color:var(--gray);margin-bottom:8px}
+.jr-tags{display:flex;gap:6px;flex-wrap:wrap}
+.jr-tag{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:100px}
+.jr-right{text-align:right;flex-shrink:0}
+.jr-pay{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin-bottom:5px;white-space:nowrap}
+.jr-type{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:100px;background:#f5f5f5;border:1px solid #e8e8e8;color:#888;display:inline-block}
+.jr-new{position:absolute;top:22px;right:28px;background:var(--red);color:#fff;font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border-radius:100px}
+
+/* ── JOB DETAIL PANEL ── */
+.job-detail{padding:28px;position:sticky;top:var(--nav-h);max-height:calc(100vh - var(--nav-h) - var(--bar-h));overflow-y:auto}
+.jd-header{margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border)}
+.jd-logo{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--border);background:#fff;margin-bottom:14px}
+.jd-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.jd-meta{font-size:12px;color:var(--gray);display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.jd-meta-item{display:flex;align-items:center;gap:5px}
+.jd-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.jd-tag{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:100px}
+.apply-btn{width:100%;padding:14px;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:none;border-radius:100px;cursor:pointer;transition:background .2s,transform .15s;margin-bottom:10px}
+.apply-btn:hover{background:#333;transform:translateY(-1px)}
+.apply-note{font-size:11px;color:var(--gray);text-align:center;line-height:1.6;margin-bottom:22px}
+
+.jd-section-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#bbb;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.jd-section-title::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.jd-desc{font-size:13px;font-weight:300;line-height:1.8;color:#444;margin-bottom:22px}
+
+/* Skill match section */
+.skill-match-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px}
+.sm-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sm-name{font-size:12px;font-weight:500;color:#111;flex:1}
+.sm-status{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:100px}
+.sm-have{background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a}
+.sm-get{background:#fef9c3;border:1px solid #fde68a;color:#92400e;cursor:pointer;transition:background .15s}
+.sm-get:hover{background:#fef08a}
+
+/* Portfolio section */
+.pf-mini{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.pf-mini:hover{border-color:var(--black)}
+.pf-mini-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.pf-mini-name{font-size:12px;font-weight:500;color:#111;flex:1}
+.pf-mini-works{font-size:10px;color:var(--gray)}
+
+/* ── COMPANY POST BANNER ── */
+.post-banner{margin:28px;border-radius:12px;background:var(--black);color:#fff;padding:36px 40px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px}
+@media(max-width:700px){.post-banner{grid-template-columns:1fr}}
+.pb-tag{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#bbb;margin-bottom:10px}
+.pb-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.pb-sub{font-size:13px;color:rgba(255,255,255,.5);line-height:1.65;max-width:400px}
+.pb-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:13px 26px;border-radius:100px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .2s}
+.pb-btn:hover{background:#fff;color:var(--black)}
+
+/* ── BOTTOM BAR ── */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--bar-h);background:#fff;border-top:1px solid var(--border);overflow:hidden;display:flex;align-items:center}
+.marq-track{display:flex;align-items:center;animation:marqRoll 20s linear infinite;white-space:nowrap;will-change:transform}
+.marq-track:hover{animation-play-state:paused}
+@keyframes marqRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mq-item{display:inline-flex;align-items:center;gap:22px;padding:0 22px}
+.mq-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:8px 22px;border-radius:100px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
+.mq-btn:hover{opacity:.8;transform:scale(.96)}
+.mq-dot{color:#ddd;font-size:20px;user-select:none}
+.toast{position:fixed;bottom:68px;right:28px;z-index:500;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:12px 22px;border-radius:100px;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="window.location.href='artroom-home.html'">← Discover</button>
+  </div>
+  <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
+  <div class="nav-right">
+    <div class="sign-wrap">
+      <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
+      <div class="sign-board" onclick="goTo('artroom-studio.html')">
+        <span class="sign-text">Open Studio</span><span class="sign-sub">Enter your space</span>
+        <div class="sign-dots"><div class="sign-dot"></div><div class="sign-dot"></div><div class="sign-dot"></div></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">Jobs & Gigs</div>
+      <h1 class="hero-title">Your portfolio<br>gets you hired.</h1>
+      <p class="hero-sub">Companies browse your ArtRoom Studio — your designs, your AI skills, your work — and reach out directly. No resume needed. Your portfolio speaks for itself.</p>
+      <div class="hero-cta-row">
+        <button class="btn btn-black" onclick="goTo('artroom-studio.html')">Open My Studio →</button>
+        <button class="btn btn-out" onclick="document.getElementById('postForm').scrollIntoView({behavior:'smooth'})">Post a Job</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="talent-float">
+        <div class="tf-av" style="background:#FFB3C6;color:#0a0a0a">M</div>
+        <div><div class="tf-name">Maya Chen</div><div class="tf-role">Brand Designer</div></div>
+        <span class="tf-match">98% match</span>
+      </div>
+      <div class="talent-float">
+        <div class="tf-av" style="background:#1B4FE8;color:#fff">J</div>
+        <div><div class="tf-name">James Park</div><div class="tf-role">UI / Systems</div></div>
+        <span class="tf-match">94% match</span>
+      </div>
+      <div class="talent-float">
+        <div class="tf-av" style="background:#FF5F1F;color:#fff">K</div>
+        <div><div class="tf-name">Kai Dubois</div><div class="tf-role">Illustrator</div></div>
+        <span class="tf-match">91% match</span>
+      </div>
+      <div class="talent-float">
+        <div class="tf-av" style="background:#7B3FA0;color:#fff">S</div>
+        <div><div class="tf-name">Seb Laurent</div><div class="tf-role">3D Artist</div></div>
+        <span class="tf-match">88% match</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-cell"><span class="stat-num">680</span><span class="stat-lbl">Open Roles</span></div>
+    <div class="stat-cell"><span class="stat-num">240+</span><span class="stat-lbl">Companies</span></div>
+    <div class="stat-cell"><span class="stat-num">$40–$200k</span><span class="stat-lbl">Pay Range</span></div>
+    <div class="stat-cell"><span class="stat-num">72%</span><span class="stat-lbl">Remote / Hybrid</span></div>
+  </div>
+
+  <!-- SEARCH + FILTER -->
+  <div class="search-bar">
+    <div class="search-input-wrap">
+      <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInp" placeholder="Search roles, companies, skills…" oninput="liveSearch()">
+    </div>
+    <button class="fpill" style="background:#0a0a0a;color:#fff" data-type="all" onclick="filt(this)">All</button>
+    <button class="fpill" style="background:#1B4FE8;color:#fff" data-type="full-time" onclick="filt(this)">Full-time</button>
+    <button class="fpill" style="background:#1A7A3C;color:#fff" data-type="freelance" onclick="filt(this)">Freelance</button>
+    <button class="fpill" style="background:#FF5F1F;color:#fff" data-type="gig" onclick="filt(this)">Gig</button>
+    <button class="fpill" style="background:#FFE500;color:#0a0a0a" data-type="remote" onclick="filt(this)">Remote</button>
+  </div>
+
+  <!-- MAIN LAYOUT: list + detail -->
+  <div class="main-layout">
+    <!-- Job list -->
+    <div class="job-list">
+      <div class="job-list-header">
+        <span class="jlh-count" id="jobCount">12 positions</span>
+        <select class="sort-select"><option>Most Relevant</option><option>Newest</option><option>Highest Pay</option></select>
+      </div>
+      <div id="jobListWrap"></div>
+    </div>
+
+    <!-- Job detail -->
+    <div class="job-detail" id="jobDetail">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- POST JOB BANNER -->
+  <div class="post-banner" id="postForm">
+    <div>
+      <div class="pb-tag">For Companies</div>
+      <div class="pb-title">Find talent with verified skills</div>
+      <p class="pb-sub">Post a role and instantly browse candidates whose ArtRoom portfolios and Skill Vault match your requirements. Every applicant comes with proof of work.</p>
+    </div>
+    <button class="pb-btn" onclick="showToast('Job posting coming soon!')">Post a Role →</button>
+  </div>
+
+</div>
+
+<div class="bottom-bar"><div class="marq-track" id="marqTrack"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const JOBS = [
+  {
+    id:0, logo:'🏢', co:'Haus Studio', loc:'New York · Hybrid', type:'full-time', isnew:true,
+    title:'Senior Brand Designer',
+    pay:'$90–120k/yr',
+    tags:[{t:'Branding',bg:'#FFB3C6',tc:'#0a0a0a'},{t:'Identity',bg:'#f5f5f5',tc:'#666'},{t:'Figma',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Lead the visual identity system for 3–5 global consumer brands per year. You\'ll work hand-in-hand with our strategy and copy teams from brief to final delivery. We care deeply about craftsmanship — logos, colour, typography, and how it all scales across touchpoints.',
+    skills:[
+      {name:"Maya's Brand Method", icon:'🎨', iconBg:'#FFB3C6', have:true},
+      {name:'Figma Systems',       icon:'⬡',  iconBg:'#1B4FE8', have:false},
+    ],
+    candidates:[
+      {name:'Maya Chen',  av:'M', avBg:'#FFB3C6', avTc:'#0a0a0a', works:'42 works'},
+      {name:'Lara Voss',  av:'L', avBg:'#00A896', avTc:'#fff',    works:'28 works'},
+    ]
+  },
+  {
+    id:1, logo:'⬡', co:'Forma Labs', loc:'San Francisco · Remote', type:'full-time', isnew:false,
+    title:'Product UI Designer',
+    pay:'$110–140k/yr',
+    tags:[{t:'UI',bg:'#1B4FE8',tc:'#fff'},{t:'Systems',bg:'#f5f5f5',tc:'#666'},{t:'Design Tokens',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Shape the interface layer of our next-gen SaaS analytics suite. This role owns the design system, token architecture, and interaction patterns for our core dashboard. You\'ll work directly with engineering in a tight, high-trust loop.',
+    skills:[
+      {name:'James UI Systems',     icon:'⬡', iconBg:'#1B4FE8', have:true},
+      {name:"Yas Mobile UX Patterns",icon:'◉', iconBg:'#FFCBA4', have:false},
+    ],
+    candidates:[
+      {name:'James Park', av:'J', avBg:'#1B4FE8', avTc:'#fff', works:'61 works'},
+      {name:'Lara Voss',  av:'L', avBg:'#00A896', avTc:'#fff', works:'28 works'},
+    ]
+  },
+  {
+    id:2, logo:'◎', co:'Neon Creative', loc:'Remote worldwide', type:'freelance', isnew:true,
+    title:'Motion Designer',
+    pay:'$80–120/hr',
+    tags:[{t:'Motion',bg:'#1A7A3C',tc:'#fff'},{t:'After Effects',bg:'#f5f5f5',tc:'#666'},{t:'Social',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Ongoing freelance engagement creating short-form content for social media, UI micro-animations, and brand films. Project-based with consistent volume — expect 20–30 hrs/week. We move fast and value initiative.',
+    skills:[
+      {name:"Rin's Motion Grammar", icon:'◈', iconBg:'#1A7A3C', have:false},
+      {name:'ArtRoom Design Eye',   icon:'✦', iconBg:'#0a0a0a', have:true},
+    ],
+    candidates:[
+      {name:'Rin Nakamura', av:'R', avBg:'#1A7A3C', avTc:'#fff', works:'37 works'},
+    ]
+  },
+  {
+    id:3, logo:'✦', co:'ArtRoom', loc:'Remote', type:'gig', isnew:false,
+    title:'Illustration Contributor',
+    pay:'$60–90/hr',
+    tags:[{t:'Illus',bg:'#FF5F1F',tc:'#fff'},{t:'Editorial',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Create editorial illustrations for ArtRoom\'s blog, campaigns, and product launches. We brief quarterly, you own the concept and execution. Clean contracts, fast payments, full credit.',
+    skills:[
+      {name:"Kai's Illustration Voice", icon:'◎', iconBg:'#FF5F1F', have:false},
+      {name:'ArtRoom Design Eye',       icon:'✦', iconBg:'#0a0a0a', have:true},
+    ],
+    candidates:[
+      {name:'Kai Dubois', av:'K', avBg:'#FF5F1F', avTc:'#fff', works:'55 works'},
+    ]
+  },
+  {
+    id:4, logo:'🌐', co:'Pulse Digital', loc:'Berlin · Hybrid', type:'full-time', isnew:false,
+    title:'3D Visual Artist',
+    pay:'$70–100k/yr',
+    tags:[{t:'3D',bg:'#7B3FA0',tc:'#fff'},{t:'Blender',bg:'#f5f5f5',tc:'#666'},{t:'Brand',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Conceive and produce 3D hero visuals for brand campaigns and digital activations. You own the full pipeline from concept sketches to final delivery. We expect craft at every frame.',
+    skills:[
+      {name:"Seb's 3D Critique System", icon:'∿', iconBg:'#7B3FA0', have:false},
+      {name:'ArtRoom Design Eye',       icon:'✦', iconBg:'#0a0a0a', have:true},
+    ],
+    candidates:[
+      {name:'Seb Laurent', av:'S', avBg:'#7B3FA0', avTc:'#fff', works:'29 works'},
+    ]
+  },
+  {
+    id:5, logo:'🔷', co:'Vega Agency', loc:'London · Remote', type:'freelance', isnew:false,
+    title:'Brand Strategy Designer',
+    pay:'$90–110/hr',
+    tags:[{t:'Branding',bg:'#FFB3C6',tc:'#0a0a0a'},{t:'Strategy',bg:'#f5f5f5',tc:'#666'},{t:'Naming',bg:'#f5f5f5',tc:'#666'}],
+    desc:'We need a strategic brand designer who can own the naming-to-identity arc on product launches. Deep thinking, clean presentation, fast turnaround.',
+    skills:[
+      {name:"Maya's Brand Method",  icon:'🎨', iconBg:'#FFB3C6', have:true},
+      {name:'ArtRoom Design Eye',   icon:'✦', iconBg:'#0a0a0a', have:true},
+    ],
+    candidates:[
+      {name:'Maya Chen', av:'M', avBg:'#FFB3C6', avTc:'#0a0a0a', works:'42 works'},
+    ]
+  },
+  {
+    id:6, logo:'🟡', co:'Arc Systems', loc:'Austin · On-site', type:'full-time', isnew:false,
+    title:'UX Research Lead',
+    pay:'$95–125k/yr',
+    tags:[{t:'UX',bg:'#1B4FE8',tc:'#fff'},{t:'Research',bg:'#f5f5f5',tc:'#666'},{t:'Testing',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Lead qualitative and quantitative research efforts for enterprise software products. You\'ll build the research practice from the ground up, partnering with design, product, and data teams.',
+    skills:[
+      {name:'James UI Systems',     icon:'⬡', iconBg:'#1B4FE8', have:false},
+      {name:'ArtRoom Design Eye',   icon:'✦', iconBg:'#0a0a0a', have:true},
+    ],
+    candidates:[
+      {name:'James Park', av:'J', avBg:'#1B4FE8', avTc:'#fff', works:'61 works'},
+    ]
+  },
+  {
+    id:7, logo:'🎯', co:'MNML Studio', loc:'Remote', type:'gig', isnew:true,
+    title:'Type / Lettering Artist',
+    pay:'$50–80/hr',
+    tags:[{t:'Type',bg:'#FFE500',tc:'#0a0a0a'},{t:'Lettering',bg:'#f5f5f5',tc:'#666'}],
+    desc:'One-off lettering commissions for packaging and brand campaigns. A few projects per month. Fast brief, fast feedback, clear scope.',
+    skills:[
+      {name:"Theo's Type Principles", icon:'T', iconBg:'#FFE500', have:false},
+    ],
+    candidates:[
+      {name:'Theo Müller', av:'T', avBg:'#FFE500', avTc:'#0a0a0a', works:'34 works'},
+    ]
+  },
+  {
+    id:8, logo:'💼', co:'Studio Kelp', loc:'Los Angeles · Hybrid', type:'full-time', isnew:false,
+    title:'Creative Director',
+    pay:'$130–160k/yr',
+    tags:[{t:'Branding',bg:'#FFB3C6',tc:'#0a0a0a'},{t:'Direction',bg:'#f5f5f5',tc:'#666'},{t:'Leadership',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Own the creative direction for an independent design studio known for craft-first brand work. You\'ll lead a small team, client relationships, and set the visual standard.',
+    skills:[
+      {name:"Maya's Brand Method",  icon:'🎨', iconBg:'#FFB3C6', have:true},
+      {name:'ArtRoom Design Eye',   icon:'✦', iconBg:'#0a0a0a', have:true},
+    ],
+    candidates:[
+      {name:'Maya Chen',  av:'M', avBg:'#FFB3C6', avTc:'#0a0a0a', works:'42 works'},
+      {name:'Kai Dubois', av:'K', avBg:'#FF5F1F', avTc:'#fff',    works:'55 works'},
+    ]
+  },
+  {
+    id:9, logo:'🧩', co:'Flux Product',  loc:'Remote', type:'remote', isnew:false,
+    title:'Product Designer',
+    pay:'$85–115k/yr',
+    tags:[{t:'Product',bg:'#1B4FE8',tc:'#fff'},{t:'Figma',bg:'#f5f5f5',tc:'#666'},{t:'Mobile',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Design mobile-first product experiences for our consumer fitness app (2M+ users). From 0→1 feature work to refining existing flows. High autonomy, high trust.',
+    skills:[
+      {name:"Yas Mobile UX Patterns", icon:'◉', iconBg:'#FFCBA4', have:false},
+      {name:'James UI Systems',       icon:'⬡', iconBg:'#1B4FE8', have:true},
+    ],
+    candidates:[
+      {name:'James Park', av:'J', avBg:'#1B4FE8', avTc:'#fff', works:'61 works'},
+      {name:'Lara Voss',  av:'L', avBg:'#00A896', avTc:'#fff', works:'28 works'},
+    ]
+  },
+  {
+    id:10, logo:'🌿', co:'Verdant Health', loc:'Chicago · Hybrid', type:'freelance', isnew:false,
+    title:'Wellness Brand Designer',
+    pay:'$70–90/hr',
+    tags:[{t:'Brand',bg:'#1A7A3C',tc:'#fff'},{t:'Wellness',bg:'#f5f5f5',tc:'#666'},{t:'Packaging',bg:'#f5f5f5',tc:'#666'}],
+    desc:'Evolve the visual system for an emerging wellness brand across packaging, digital, and retail. Calm, organic aesthetic required. Multi-month engagement.',
+    skills:[
+      {name:"Lara's Wellness Aesthetic", icon:'✿', iconBg:'#A8E63D', have:false},
+      {name:"Maya's Brand Method",       icon:'🎨', iconBg:'#FFB3C6', have:true},
+    ],
+    candidates:[
+      {name:'Lara Voss',  av:'L', avBg:'#00A896', avTc:'#fff', works:'28 works'},
+      {name:'Maya Chen',  av:'M', avBg:'#FFB3C6', avTc:'#0a0a0a', works:'42 works'},
+    ]
+  },
+  {
+    id:11, logo:'⚡', co:'Volt Games',  loc:'Remote', type:'remote', isnew:true,
+    title:'UI Artist (Games)',
+    pay:'$75–95k/yr',
+    tags:[{t:'UI',bg:'#1B4FE8',tc:'#fff'},{t:'Games',bg:'#f5f5f5',tc:'#666'},{t:'Motion',bg:'#1A7A3C',tc:'#fff'}],
+    desc:'Design in-game UI, HUD elements, and menus for a stylized action RPG. You love systems and have a sharp eye for animated UI that feels alive without distracting.',
+    skills:[
+      {name:"Rin's Motion Grammar", icon:'◈', iconBg:'#1A7A3C', have:false},
+      {name:'James UI Systems',     icon:'⬡', iconBg:'#1B4FE8', have:true},
+    ],
+    candidates:[
+      {name:'Rin Nakamura', av:'R', avBg:'#1A7A3C', avTc:'#fff', works:'37 works'},
+      {name:'James Park',   av:'J', avBg:'#1B4FE8', avTc:'#fff', works:'61 works'},
+    ]
+  },
+];
+
+const NAME2HANDLE = {'Maya Chen':'maya','James Park':'james','Theo Müller':'theo','Rin Nakamura':'rin','Kai Dubois':'kai','Seb Laurent':'seb','Lara Voss':'lara','Noa Becker':'noa'};
+let activeId = 0;
+let visibleJobs = JOBS.slice();
+
+function renderList() {
+  const wrap = document.getElementById('jobListWrap');
+  wrap.innerHTML = '';
+  document.getElementById('jobCount').textContent = visibleJobs.length + ' position' + (visibleJobs.length !== 1 ? 's' : '');
+  visibleJobs.forEach(j => {
+    const el = document.createElement('div');
+    el.className = 'job-row' + (j.id === activeId ? ' active' : '');
+    el.innerHTML = `
+      <div class="jr-logo">${j.logo}</div>
+      <div class="jr-mid">
+        <div class="jr-title">${j.title}</div>
+        <div class="jr-co">${j.co} · ${j.loc}</div>
+        <div class="jr-tags">${j.tags.map(t=>`<span class="jr-tag" style="background:${t.bg};color:${t.tc}">${t.t}</span>`).join('')}</div>
+      </div>
+      <div class="jr-right">
+        <div class="jr-pay">${j.pay}</div>
+        <span class="jr-type">${j.type}</span>
+        ${j.isnew ? '<div class="jr-new">NEW</div>' : ''}
+      </div>`;
+    el.addEventListener('click', () => { activeId = j.id; renderList(); renderDetail(j); });
+    wrap.appendChild(el);
+  });
+}
+
+function renderDetail(j) {
+  document.getElementById('jobDetail').innerHTML = `
+    <div class="jd-header">
+      <div class="jd-logo">${j.logo}</div>
+      <div class="jd-title">${j.title}</div>
+      <div class="jd-meta">
+        <span class="jd-meta-item">🏢 ${j.co}</span>
+        <span class="jd-meta-item">📍 ${j.loc}</span>
+        <span class="jd-meta-item">💰 ${j.pay}</span>
+      </div>
+      <div class="jd-tags">${j.tags.map(t=>`<span class="jd-tag" style="background:${t.bg};color:${t.tc}">${t.t}</span>`).join('')}</div>
+      <button class="apply-btn" onclick="showToast('Application sent with your portfolio!')">Apply with Portfolio →</button>
+      <p class="apply-note">Your ArtRoom Studio, AI Skills, and portfolio<br>are automatically attached when you apply.</p>
+    </div>
+    <div class="jd-section-title">About the Role</div>
+    <p class="jd-desc">${j.desc}</p>
+    <div class="jd-section-title">Skill Vault Match</div>
+    ${j.skills.map(s=>`
+      <div class="skill-match-row">
+        <div class="sm-icon" style="background:${s.iconBg}">${s.icon}</div>
+        <span class="sm-name">${s.name}</span>
+        ${s.have
+          ? '<span class="sm-status sm-have">✓ Installed</span>'
+          : `<span class="sm-status sm-get" onclick="goTo('artroom-skill-vault.html')">Get it →</span>`}
+      </div>`).join('')}
+    <div class="jd-section-title" style="margin-top:20px">Portfolio Matches</div>
+    ${j.candidates.map(c=>`
+      <div class="pf-mini" onclick="goTo(NAME2HANDLE['${c.name}']==='maya'?'artroom-studio.html':'artroom-artist.html?handle='+NAME2HANDLE['${c.name}'])">
+        <div class="pf-mini-av" style="background:${c.avBg};color:${c.avTc}">${c.av}</div>
+        <span class="pf-mini-name">${c.name}</span>
+        <span class="pf-mini-works">${c.works}</span>
+      </div>`).join('')}
+  `;
+}
+
+function filt(btn) {
+  const type = btn.dataset.type;
+  document.querySelectorAll('.fpill').forEach(p => type==='all' ? p.classList.remove('dim') : p.classList.add('dim'));
+  if (type !== 'all') btn.classList.remove('dim');
+  visibleJobs = type === 'all' ? JOBS : JOBS.filter(j => j.type === type || (type === 'remote' && j.loc.toLowerCase().includes('remote')));
+  renderList();
+  renderDetail(visibleJobs[0] || JOBS[0]);
+  activeId = (visibleJobs[0] || JOBS[0]).id;
+}
+
+function liveSearch() {
+  const q = document.getElementById('searchInp').value.toLowerCase();
+  visibleJobs = q ? JOBS.filter(j =>
+    j.title.toLowerCase().includes(q) ||
+    j.co.toLowerCase().includes(q) ||
+    j.tags.some(t => t.t.toLowerCase().includes(q)) ||
+    j.desc.toLowerCase().includes(q)
+  ) : JOBS;
+  renderList();
+  if (visibleJobs.length) { activeId = visibleJobs[0].id; renderDetail(visibleJobs[0]); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ── Persistent Applications ── */
+const _origRenderDetail = renderDetail;
+renderDetail = function(j) {
+  _origRenderDetail(j);
+  if (ArtState.hasApplied(j.id)) {
+    const btn = document.querySelector('.apply-btn');
+    if (btn) { btn.textContent = 'Applied ✓'; btn.style.background = '#1A7A3C'; btn.style.cursor = 'default'; btn.onclick = null; }
+  } else {
+    const btn = document.querySelector('.apply-btn');
+    if (btn) {
+      btn.onclick = function() {
+        ArtState.applyToJob(j.id, j.title);
+        this.textContent = 'Applied ✓'; this.style.background = '#1A7A3C'; this.style.cursor = 'default'; this.onclick = null;
+        showToast('Application sent with your portfolio!');
+      };
+    }
+  }
+  /* Update skill match states */
+  document.querySelectorAll('.sm-get').forEach(el => {
+    const name = el.closest('.skill-match-row').querySelector('.sm-name').textContent;
+    if (ArtState.hasSkill(name)) { el.textContent = '✓ Installed'; el.className = 'sm-status sm-have'; el.onclick = null; }
+  });
+};
+
+// Init
+renderList();
+renderDetail(JOBS[0]);
+
+// Marquee
+const MQ=[
+  {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
+  {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
+  {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
+];
+const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
+document.getElementById('marqTrack').innerHTML=ch+ch;
+function goTo(p){window.location.href=p;}
+</script>
+</body>
+</html>

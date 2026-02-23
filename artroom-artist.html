@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArtRoom — Artist</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="state.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--nav-h:56px}
+body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav-h);background:#fff;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-back{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;background:none;border:none;cursor:pointer;color:var(--black);text-decoration:none;display:flex;align-items:center;gap:6px;padding:4px 2px;transition:opacity .2s}
+.nav-back:hover{opacity:.45}
+.nav-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--black);cursor:pointer;text-decoration:none;display:block;text-align:center}
+.nav-right{display:flex;justify-content:flex-end;align-items:flex-end}
+.sign-wrap{display:flex;flex-direction:column;align-items:center}
+.sign-chain{display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:5px}
+.chain-link{width:7px;height:4px;border:1.5px solid #ccc;border-radius:50%}
+.chain-link:nth-child(odd){transform:rotate(90deg)}
+.sign-board{display:block;text-align:center;padding:8px 18px 10px;border:1.5px solid var(--black);border-radius:7px;background:#fff;cursor:pointer;transform-origin:top center;animation:signRock 3.8s ease-in-out infinite;user-select:none;min-width:118px;position:relative}
+.sign-board::before{content:'';position:absolute;top:-2px;left:14px;right:14px;height:5px;background:#fff;z-index:1}
+.sign-text{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--black);display:block;line-height:1}
+.sign-sub{font-family:'DM Sans',sans-serif;font-size:8px;font-weight:300;letter-spacing:.13em;text-transform:uppercase;color:#bbb;display:block;margin-top:4px;line-height:1}
+.sign-dots{display:flex;justify-content:center;gap:4px;margin-top:7px}
+.sign-dot{width:4px;height:4px;border-radius:50%;background:var(--black)}
+@keyframes signRock{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+
+/* PAGE */
+.page{padding-top:var(--nav-h)}
+
+/* PROFILE HERO */
+.profile-hero{padding:48px 28px 40px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:28px;flex-wrap:wrap}
+.profile-av{width:72px;height:72px;border-radius:50%;font-family:'Syne',sans-serif;font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.profile-info{flex:1;min-width:200px}
+.profile-name{font-family:'Syne',sans-serif;font-size:clamp(24px,4vw,36px);font-weight:800;letter-spacing:-.03em;margin-bottom:4px}
+.profile-handle{font-size:13px;color:var(--gray);margin-bottom:12px}
+.profile-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.profile-tag{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border-radius:100px;border:1px solid var(--border);color:var(--gray)}
+.profile-stats{display:flex;gap:28px;margin-bottom:18px}
+.ps-n{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;display:block}
+.ps-l{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray)}
+.follow-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 28px;border-radius:100px;border:1.5px solid var(--black);background:var(--black);color:#fff;cursor:pointer;transition:all .2s}
+.follow-btn:hover{opacity:.85}
+.follow-btn.following{background:#fff;color:var(--black);border-color:var(--border)}
+.follow-btn.following:hover{border-color:var(--black)}
+
+/* BANNER STRIP */
+.banner-strip{display:flex;height:6px}
+.banner-strip div{flex:1}
+
+/* SECTION */
+.sec-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#bbb;padding:28px 28px 16px;display:flex;align-items:center;gap:14px}
+.sec-label::after{content:'';flex:1;height:1px;background:#f0f0f0}
+
+/* WORK GRID */
+.work-wrap{padding:0 28px 60px}
+.work-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.work-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.work-grid{grid-template-columns:repeat(2,1fr)}}
+.wc{border-radius:10px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .2s;opacity:0;transform:translateY(14px);background:#fff}
+.wc.vis{opacity:1;transform:translateY(0)}
+.wc:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.1);border-color:#ccc}
+.wc:hover .wc-buy{opacity:1;transform:translateX(-50%) translateY(0)}
+.wc-th{width:100%;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.wc-th svg{width:100%;height:100%;display:block;transition:transform .4s}
+.wc:hover .wc-th svg{transform:scale(1.04)}
+.wc-buy{position:absolute;bottom:10px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;padding:8px 20px;border-radius:100px;white-space:nowrap;opacity:0;transition:opacity .2s,transform .2s;border:none;cursor:pointer}
+.wc-info{padding:13px 13px 15px}
+.wc-title{font-size:13px;font-weight:400;color:#111;margin-bottom:6px;line-height:1.3}
+.wc-row{display:flex;align-items:center;justify-content:space-between}
+.wc-price{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.wc-tag{font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:100px;margin-top:8px;display:inline-block}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:80px 28px;color:var(--gray)}
+.empty-state-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:var(--black)}
+
+/* PAYMENT MODAL */
+.pay-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.pay-overlay.open{opacity:1;pointer-events:auto}
+.pay-modal{background:#fff;border-radius:16px;width:min(420px,92vw);padding:28px;position:relative;transform:translateY(12px) scale(.97);transition:transform .3s cubic-bezier(.34,1.4,.64,1)}
+.pay-overlay.open .pay-modal{transform:translateY(0) scale(1)}
+.pay-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray);transition:all .2s}
+.pay-close:hover{border-color:var(--black);color:var(--black)}
+.pay-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+.pay-item-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}
+.pay-item-by{font-size:11px;color:var(--gray);margin-top:3px}
+.pay-price-tag{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.pay-methods{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:18px}
+.pay-method-btn{padding:9px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.pay-method-btn.active{border-color:var(--black);background:#f9f9f9}
+.pay-panel{display:none}.pay-panel.active{display:block}
+.apple-pay-btn{width:100%;padding:16px;border-radius:10px;background:var(--black);color:#fff;font-size:20px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;transition:opacity .2s}
+.apple-pay-btn:hover{opacity:.85}
+.pay-divider{text-align:center;font-size:11px;color:#ccc;margin:14px 0;position:relative}
+.pay-divider::before,.pay-divider::after{content:'';position:absolute;top:50%;width:36%;height:1px;background:#eee}
+.pay-divider::before{left:0}.pay-divider::after{right:0}
+.pay-field{margin-bottom:12px}
+.pay-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);display:block;margin-bottom:5px}
+.pay-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.pay-input:focus{border-color:var(--black)}
+.pay-submit{width:100%;padding:13px;border-radius:10px;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;border:none;cursor:pointer;margin-top:6px;transition:opacity .2s}
+.pay-submit:hover{opacity:.85}
+.usdc-wrap{border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.usdc-label-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.usdc-logo{width:36px;height:36px;border-radius:50%;background:#2775CA;color:#fff;font-family:'Syne',sans-serif;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1}
+.usdc-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700}
+.usdc-sub{font-size:10px;color:var(--gray)}
+.usdc-amount{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;text-align:center;padding:10px 0}
+.usdc-amount span{font-size:14px;color:var(--gray);font-weight:600}
+.usdc-addr{display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;padding:8px 12px;border-radius:6px;font-family:monospace;font-size:12px;color:var(--gray);margin-bottom:10px}
+.usdc-copy{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;background:var(--black);color:#fff;border:none;padding:4px 10px;border-radius:100px;cursor:pointer}
+.usdc-networks{display:flex;gap:6px;flex-wrap:wrap}
+.usdc-network{font-size:10px;padding:4px 10px;border-radius:100px;border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.usdc-network.active-net{background:var(--black);color:#fff;border-color:var(--black)}
+.usdc-fee-note{font-size:10px;color:var(--gray);text-align:center;margin:10px 0}
+.pay-success{text-align:center;padding:20px 0}
+.pay-success-icon{font-size:48px;margin-bottom:12px}
+.pay-success-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px}
+.pay-success-sub{font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:20px}
+.pay-success-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;padding:12px 28px;border-radius:100px;background:var(--black);color:#fff;border:none;cursor:pointer}
+
+.toast{position:fixed;bottom:28px;right:28px;z-index:600;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:12px 22px;border-radius:100px;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-left">
+    <button class="nav-back" onclick="history.back()">← Back</button>
+  </div>
+  <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
+  <div class="nav-right">
+    <div class="sign-wrap">
+      <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
+      <div class="sign-board" onclick="window.location.href='artroom-studio.html'">
+        <span class="sign-text">Open Studio</span><span class="sign-sub">Enter your space</span>
+        <div class="sign-dots"><div class="sign-dot"></div><div class="sign-dot"></div><div class="sign-dot"></div></div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="banner-strip" id="bannerStrip"></div>
+  <div class="profile-hero" id="profileHero"></div>
+  <div class="sec-label" id="worksLabel">Works</div>
+  <div class="work-wrap"><div class="work-grid" id="workGrid"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- PAYMENT MODAL -->
+<div class="pay-overlay" id="payOverlay" onclick="if(event.target===this)closePay()">
+  <div class="pay-modal">
+    <button class="pay-close" onclick="closePay()">&#x2715;</button>
+    <div class="pay-header">
+      <div>
+        <div class="pay-item-name" id="payItemName">Item</div>
+        <div class="pay-item-by" id="payItemBy">creator.artroom</div>
+      </div>
+      <div class="pay-price-tag" id="payPriceTag">$49</div>
+    </div>
+    <div class="pay-body" id="payBody">
+      <div class="pay-methods">
+        <button class="pay-method-btn active" onclick="setPayMethod('apple',this)"><span>&#xF8FF;</span> Apple Pay</button>
+        <button class="pay-method-btn" onclick="setPayMethod('usdc',this)">&#x25CE; USDC</button>
+        <button class="pay-method-btn" onclick="setPayMethod('card',this)">&#x25A6; Card</button>
+      </div>
+      <div class="pay-panel active" id="panel-apple">
+        <button class="apple-pay-btn" onclick="submitPay()"><span>&#xF8FF;</span> Pay</button>
+        <div class="pay-divider">or pay another way</div>
+        <p style="font-size:12px;color:#bbb;text-align:center;line-height:1.7">Apple Pay uses Face ID or Touch ID.<br>No card details entered manually.</p>
+      </div>
+      <div class="pay-panel" id="panel-usdc">
+        <div class="usdc-wrap">
+          <div class="usdc-label-row">
+            <div class="usdc-logo">USD<br>C</div>
+            <div><div class="usdc-title">Pay with USDC</div><div class="usdc-sub">Stablecoin - Instant - Near-zero fees</div></div>
+          </div>
+          <div class="usdc-amount" id="usdcAmount">49.00 <span>USDC</span></div>
+          <div class="usdc-addr"><span id="usdcAddr">0x3fA8B2c9...d4E2</span><button class="usdc-copy" id="usdcCopyBtn" onclick="copyAddr()">Copy</button></div>
+          <div class="usdc-networks">
+            <span class="usdc-network active-net" onclick="setNet(this,'Ethereum')">Ethereum</span>
+            <span class="usdc-network" onclick="setNet(this,'Solana')">Solana</span>
+            <span class="usdc-network" onclick="setNet(this,'Base')">Base</span>
+            <span class="usdc-network" onclick="setNet(this,'Polygon')">Polygon</span>
+          </div>
+        </div>
+        <p class="usdc-fee-note">Send exactly the amount shown - confirms in ~10s on Solana or Base</p>
+        <button class="pay-submit" onclick="submitPay()">I've Sent the Payment &#x2192;</button>
+      </div>
+      <div class="pay-panel" id="panel-card">
+        <div class="pay-field"><label class="pay-label">Card Number</label><input class="pay-input" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="pay-field"><label class="pay-label">Expiry</label><input class="pay-input" placeholder="MM / YY" maxlength="7" oninput="fmtExp(this)"></div>
+          <div class="pay-field"><label class="pay-label">CVC</label><input class="pay-input" placeholder="123" maxlength="3"></div>
+        </div>
+        <button class="pay-submit" onclick="submitPay()">Pay <span id="payBtnAmt">$49</span></button>
+      </div>
+    </div>
+    <div class="pay-success" id="paySuccess" style="display:none">
+      <div class="pay-success-icon">&#x1F389;</div>
+      <div class="pay-success-title">Payment successful!</div>
+      <p class="pay-success-sub">Your purchase is confirmed.<br><strong id="paySuccessItem"></strong> has been added to your Studio.</p>
+      <button class="pay-success-btn" onclick="closePay()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Artist Data ── */
+const ARTISTS = [
+  { av:'M', avBg:'#FFB3C6', avTc:'#0a0a0a', name:'Maya Chen',    handle:'maya',  tags:['Branding','Identity'], works:42, followers:'12k',  bannerColors:['#FFB3C6','#1B4FE8','#FFE500','#0a0a0a'] },
+  { av:'J', avBg:'#1B4FE8', avTc:'#fff',    name:'James Park',   handle:'james', tags:['UI / UX','Systems'],   works:61, followers:'3.4k', bannerColors:['#1B4FE8','#00A896','#0D1B4B','#1B4FE8'] },
+  { av:'T', avBg:'#FFE500', avTc:'#0a0a0a', name:'Theo Muller',  handle:'theo',  tags:['Typography','Print'],  works:34, followers:'1.8k', bannerColors:['#FFE500','#f5f0d0','#E8001A','#0a0a0a'] },
+  { av:'R', avBg:'#E8001A', avTc:'#fff',    name:'Rin Nakamura', handle:'rin',   tags:['Motion','3D'],         works:37, followers:'2.7k', bannerColors:['#E8001A','#A8E63D','#FF5F1F','#1A7A3C'] },
+  { av:'K', avBg:'#FF5F1F', avTc:'#fff',    name:'Kai Dubois',   handle:'kai',   tags:['Illustration','Editorial'], works:55, followers:'4.2k', bannerColors:['#FF5F1F','#FFB3C6','#FFE500','#0a0a0a'] },
+  { av:'S', avBg:'#7B3FA0', avTc:'#fff',    name:'Seb Laurent',  handle:'seb',   tags:['3D','Render'],          works:29, followers:'1.6k', bannerColors:['#7B3FA0','#0D1B4B','#C8375B','#7B3FA0'] },
+  { av:'L', avBg:'#00A896', avTc:'#fff',    name:'Lara Voss',    handle:'lara',  tags:['UI','Product'],         works:28, followers:'1.1k', bannerColors:['#00A896','#A8E63D','#FFCBA4','#E8D5B0'] },
+  { av:'N', avBg:'#A8E63D', avTc:'#0a0a0a', name:'Noa Becker',   handle:'noa',   tags:['Branding','Web'],       works:19, followers:'890',  bannerColors:['#A8E63D','#1A7A3C','#FFE500','#0a0a0a'] },
+  { av:'L', avBg:'#1A7A3C', avTc:'#fff',    name:'Leo Grant',    handle:'leo',   tags:['Branding','Nature'],    works:23, followers:'1.3k', bannerColors:['#1A7A3C','#A8E63D','#E8D5B0','#0a0a0a'] },
+  { av:'M', avBg:'#7B3FA0', avTc:'#fff',    name:'Mia Torres',   handle:'mia',   tags:['3D','Space'],           works:31, followers:'2.2k', bannerColors:['#7B3FA0','#FFB3C6','#0D1B4B','#C8375B'] },
+  { av:'A', avBg:'#0D1B4B', avTc:'#fff',    name:'Arc Studio',   handle:'arc',   tags:['Motion','Night'],       works:45, followers:'3.1k', bannerColors:['#0D1B4B','#1B4FE8','#A8E63D','#0D1B4B'] },
+  { av:'R', avBg:'#C8375B', avTc:'#fff',    name:'Rosa Kim',     handle:'rosa',  tags:['Illustration','Paper'], works:26, followers:'980',  bannerColors:['#C8375B','#FFB3C6','#FFE500','#C8375B'] },
+  { av:'E', avBg:'#E8D5B0', avTc:'#0a0a0a', name:'Emi Sato',     handle:'emi',   tags:['Typography','Editorial'], works:18, followers:'760', bannerColors:['#E8D5B0','#C8375B','#FFE500','#0a0a0a'] },
+  { av:'Y', avBg:'#FFCBA4', avTc:'#0a0a0a', name:'Yas Okafor',   handle:'yas',   tags:['UI/UX','Mobile'],       works:22, followers:'1.0k', bannerColors:['#FFCBA4','#FF5F1F','#1B4FE8','#FFCBA4'] },
+  { av:'F', avBg:'#5EEAD4', avTc:'#0a0a0a', name:'Finn Walsh',   handle:'finn',  tags:['Brand','Wellness'],     works:15, followers:'670',  bannerColors:['#5EEAD4','#00A896','#A8E63D','#0a0a0a'] },
+  { av:'C', avBg:'#FDE68A', avTc:'#0a0a0a', name:'Cleo Rivera',  handle:'cleo',  tags:['Illustration','Light'], works:48, followers:'5.8k', bannerColors:['#FDE68A','#FF5F1F','#FFB3C6','#FDE68A'] },
+];
+
+const DESIGNS = [
+  { color:'#FFB3C6', tc:'#0a0a0a', label:'a soft system',    by:'maya',  tag:'brand',  price:'$79',  h:270 },
+  { color:'#E8001A', tc:'#fff',    label:'signal work',      by:'rin',   tag:'motion', price:'$59',  h:220 },
+  { color:'#1A7A3C', tc:'#fff',    label:'deep roots',       by:'leo',   tag:'brand',  price:'$89',  h:340 },
+  { color:'#1B4FE8', tc:'#fff',    label:'dashboard v3',     by:'james', tag:'ui',     price:'$129', h:255 },
+  { color:'#FFE500', tc:'#0a0a0a', label:'forma type',       by:'theo',  tag:'type',   price:'$49',  h:300 },
+  { color:'#7B3FA0', tc:'#fff',    label:'inner world',      by:'mia',   tag:'3d',     price:'$149', h:240 },
+  { color:'#FF5F1F', tc:'#fff',    label:'heat index',       by:'kai',   tag:'illus',  price:'$39',  h:320 },
+  { color:'#00A896', tc:'#fff',    label:'coastal drift',    by:'lara',  tag:'brand',  price:'$69',  h:200 },
+  { color:'#A8E63D', tc:'#0a0a0a', label:'growth data',      by:'noa',   tag:'ui',     price:'$99',  h:275 },
+  { color:'#0D1B4B', tc:'#fff',    label:'night shift',      by:'arc',   tag:'motion', price:'$109', h:350 },
+  { color:'#C8375B', tc:'#fff',    label:'cut & fold',       by:'rosa',  tag:'illus',  price:'$44',  h:230 },
+  { color:'#E8D5B0', tc:'#0a0a0a', label:'warm logic',       by:'emi',   tag:'type',   price:'$89',  h:285 },
+  { color:'#2E2E2E', tc:'#fff',    label:'void state',       by:'seb',   tag:'3d',     price:'$149', h:260 },
+  { color:'#FFCBA4', tc:'#0a0a0a', label:'peach protocol',   by:'yas',   tag:'ui',     price:'$79',  h:310 },
+  { color:'#5EEAD4', tc:'#0a0a0a', label:'tidal system',     by:'finn',  tag:'brand',  price:'$99',  h:250 },
+  { color:'#FDE68A', tc:'#0a0a0a', label:'golden hour',      by:'cleo',  tag:'illus',  price:'$29',  h:190 },
+];
+
+const ARTS = [
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><path d="M20 150 Q80 50 130 100 Q180 150 240 50" stroke="rgba(0,0,0,.18)" stroke-width="2" fill="none"/><rect x="80" y="80" width="60" height="40" fill="rgba(255,80,80,.28)" rx="2"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><circle cx="130" cy="100" r="55" fill="rgba(255,255,255,.1)"/><circle cx="130" cy="100" r="32" fill="rgba(255,255,255,.08)"/><circle cx="130" cy="100" r="10" fill="rgba(255,255,255,.18)"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><polygon points="130,20 220,170 40,170" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="2"/><polygon points="130,20 220,170 130,108" fill="rgba(255,255,255,.1)"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><rect x="30" y="60" width="30" height="120" fill="rgba(255,255,255,.18)" rx="2"/><rect x="76" y="40" width="30" height="140" fill="rgba(255,255,255,.22)" rx="2"/><rect x="122" y="20" width="30" height="160" fill="rgba(255,255,255,.26)" rx="2"/><rect x="168" y="50" width="30" height="130" fill="rgba(255,255,255,.18)" rx="2"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><text x="10" y="170" font-family="Georgia,serif" font-size="170" font-weight="900" fill="rgba(0,0,0,.1)">A</text></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><ellipse cx="130" cy="100" rx="76" ry="76" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/><ellipse cx="130" cy="100" rx="76" ry="28" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/><ellipse cx="130" cy="100" rx="28" ry="76" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><defs><pattern id="hg" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="20" fill="rgba(255,255,255,.12)"/></pattern></defs><rect width="260" height="200" fill="url(#hg)"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><circle cx="130" cy="100" r="60" fill="rgba(255,255,255,.08)"/><line x1="40" y1="100" x2="220" y2="100" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/><line x1="130" y1="25" x2="130" y2="175" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><path d="M0 130 Q42 90 84 130 Q126 170 168 130 Q210 90 260 130" stroke="rgba(255,255,255,.4)" stroke-width="2" fill="none"/><path d="M0 155 Q42 115 84 155 Q126 195 168 155 Q210 115 260 155" stroke="rgba(255,255,255,.2)" stroke-width="1.5" fill="none"/></svg>`,
+  `<svg viewBox="0 0 260 200" preserveAspectRatio="xMidYMid slice"><text x="130" y="120" text-anchor="middle" font-family="Georgia,serif" font-size="56" fill="rgba(255,255,255,.14)">Aa</text></svg>`,
+];
+
+const TAGBG = { brand:'#FFB3C6', ui:'#1B4FE8', type:'#FFE500', illus:'#FF5F1F', motion:'#1A7A3C', '3d':'#7B3FA0' };
+const TAGTC = { brand:'#0a0a0a', ui:'#fff', type:'#0a0a0a', illus:'#fff', motion:'#fff', '3d':'#fff' };
+
+/* ── Read handle from URL ── */
+const handle = new URLSearchParams(window.location.search).get('handle');
+const artist = ARTISTS.find(a => a.handle === handle);
+
+if (!artist) {
+  document.getElementById('profileHero').innerHTML = '<div class="empty-state"><div class="empty-state-title">Artist not found</div><p>This profile doesn\'t exist.</p></div>';
+  document.getElementById('worksLabel').style.display = 'none';
+} else {
+  document.title = 'ArtRoom — ' + artist.name;
+
+  /* Banner */
+  document.getElementById('bannerStrip').innerHTML = artist.bannerColors.map(c => `<div style="background:${c}"></div>`).join('');
+
+  /* Profile hero */
+  const isFollowing = ArtState.isFollowing(artist.handle);
+  document.getElementById('profileHero').innerHTML = `
+    <div class="profile-av" style="background:${artist.avBg};color:${artist.avTc}">${artist.av}</div>
+    <div class="profile-info">
+      <div class="profile-name">${artist.name}</div>
+      <div class="profile-handle">@${artist.handle}.artroom</div>
+      <div class="profile-tags">${artist.tags.map(t => `<span class="profile-tag">${t}</span>`).join('')}</div>
+      <div class="profile-stats">
+        <div><span class="ps-n">${artist.works}</span><span class="ps-l">Works</span></div>
+        <div><span class="ps-n">${artist.followers}</span><span class="ps-l">Followers</span></div>
+      </div>
+      <button class="follow-btn ${isFollowing ? 'following' : ''}" id="followBtn" onclick="toggleFollow()">${isFollowing ? 'Following' : 'Follow'}</button>
+    </div>
+  `;
+
+  /* Works grid */
+  const works = DESIGNS.filter(d => d.by === artist.handle);
+  const grid = document.getElementById('workGrid');
+
+  if (!works.length) {
+    document.getElementById('worksLabel').textContent = '';
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>No public works yet.</p></div>';
+  } else {
+    document.getElementById('worksLabel').innerHTML = `Works (${works.length})`;
+    works.forEach((d, i) => {
+      const el = document.createElement('div');
+      el.className = 'wc';
+      el.style.transitionDelay = `${(i % 4) * 0.06}s`;
+      el.innerHTML = `
+        <div class="wc-th" style="height:${d.h}px;background:${d.color}">${ARTS[i % ARTS.length]}
+          <button class="wc-buy" onclick="event.stopPropagation();openPay('${d.label.replace(/'/g,"\\'")}','${d.price}','${artist.handle}')">Buy &#x2192;</button>
+        </div>
+        <div class="wc-info">
+          <div class="wc-title">${d.label}</div>
+          <div class="wc-row"><span class="wc-price">${d.price}</span></div>
+          <span class="wc-tag" style="background:${TAGBG[d.tag] || '#eee'};color:${TAGTC[d.tag] || '#000'}">${d.tag}</span>
+        </div>`;
+      el.addEventListener('click', () => openPay(d.label, d.price, artist.handle));
+      grid.appendChild(el);
+      setTimeout(() => el.classList.add('vis'), (i % 4) * 60 + 200);
+    });
+  }
+}
+
+function toggleFollow() {
+  const btn = document.getElementById('followBtn');
+  const now = ArtState.toggleFollow(artist.handle);
+  btn.textContent = now ? 'Following' : 'Follow';
+  btn.classList.toggle('following', now);
+  showToast(now ? `Following ${artist.name}` : `Unfollowed ${artist.name}`);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ── Payment Modal ── */
+let _payItem = '', _payPrice = '', _payBy = '';
+function openPay(name, price, by) {
+  _payItem = name; _payPrice = price; _payBy = by || 'artroom';
+  const amt = price.replace('$', '');
+  document.getElementById('payItemName').textContent = name;
+  document.getElementById('payItemBy').textContent = _payBy + '.artroom';
+  document.getElementById('payPriceTag').textContent = price;
+  document.getElementById('usdcAmount').innerHTML = amt + '.00 <span>USDC</span>';
+  document.getElementById('payBtnAmt').textContent = price;
+  document.getElementById('paySuccess').style.display = 'none';
+  document.getElementById('payBody').style.display = '';
+  setPayMethod('apple', document.querySelector('.pay-method-btn'));
+  document.getElementById('payOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePay() {
+  document.getElementById('payOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function setPayMethod(m, btn) {
+  document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.pay-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + m).classList.add('active');
+}
+function setNet(el, net) {
+  document.querySelectorAll('.usdc-network').forEach(n => n.classList.remove('active-net'));
+  el.classList.add('active-net');
+  const a = { Ethereum:'0x3fA8B2c9...d4E2', Solana:'7hXp9mNr...mK3R', Base:'0x9Bc2aF71...c881', Polygon:'0x5Ef1bD34...f220' };
+  document.getElementById('usdcAddr').textContent = a[net];
+}
+function copyAddr() {
+  const btn = document.getElementById('usdcCopyBtn');
+  btn.textContent = 'Copied \u2713'; setTimeout(() => btn.textContent = 'Copy', 2000);
+}
+function fmtCard(inp) { let v = inp.value.replace(/\D/g, '').slice(0, 16); inp.value = v.replace(/(\d{4})(?=\d)/g, '$1 '); }
+function fmtExp(inp) { let v = inp.value.replace(/\D/g, '').slice(0, 4); if (v.length >= 2) v = v.slice(0, 2) + ' / ' + v.slice(2); inp.value = v; }
+function submitPay() {
+  document.getElementById('payBody').style.display = 'none';
+  document.getElementById('paySuccess').style.display = 'block';
+  document.getElementById('paySuccessItem').textContent = _payItem;
+  ArtState.addPurchase({ title: _payItem, price: _payPrice, by: _payBy });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePay(); });
+</script>
+</body>
+</html>
