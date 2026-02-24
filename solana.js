@@ -429,7 +429,14 @@ const ArtWallet = {
       'font-size:11px;font-weight:700;color:#9945FF;margin-top:12px;' +
       'text-decoration:none;transition:opacity .2s;' +
     '}' +
-    '.sol-explorer-link:hover{opacity:.7}';
+    '.sol-explorer-link:hover{opacity:.7}' +
+    '.pay-save-tag{' +
+      'background:#22c55e;color:#fff;font-size:.55em;padding:1px 6px;' +
+      'border-radius:8px;margin-left:4px;vertical-align:middle;font-weight:700;' +
+    '}' +
+    '.pay-save-badge{' +
+      'display:block;font-size:.75rem;color:#22c55e;font-weight:600;margin-top:2px;text-align:right;' +
+    '}';
 
   document.head.appendChild(style);
 })();

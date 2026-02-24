@@ -1393,18 +1393,20 @@ mt.innerHTML = ch+ch;
 /* ─────────────────────────────
    PAYMENT MODAL
 ───────────────────────────── */
-let _payItem='',_payPrice='',_payBy='';
+let _payItem='',_payPrice='',_payPriceFiat='',_payBy='';
 function openPay(name,price,by){
   _payItem=name;_payPrice=price;_payBy=by||'artroom';
   const amt=price.replace('$','');
+  const numAmt=parseFloat(amt);
+  _payPriceFiat='$'+(numAmt*1.05).toFixed(2);
   document.getElementById('payItemName').textContent=name;
   document.getElementById('payItemBy').textContent=_payBy+'.artroom';
   document.getElementById('payPriceTag').textContent=price;
   document.getElementById('usdcAmount').innerHTML=amt+'.00 <span>USDC</span>';
-  document.getElementById('payBtnAmt').textContent=price;
+  document.getElementById('payBtnAmt').textContent=_payPriceFiat;
   document.getElementById('paySuccess').style.display='none';
   document.getElementById('payBody').style.display='';
-  setPayMethod('apple',document.querySelector('.pay-method-btn'));
+  setPayMethod('usdc',document.querySelector('.pay-method-btn'));
   document.getElementById('payOverlay').classList.add('open');
   document.body.style.overflow='hidden';
 }
@@ -1417,6 +1419,12 @@ function setPayMethod(m,btn){
   btn.classList.add('active');
   document.querySelectorAll('.pay-panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+m).classList.add('active');
+  var tag=document.getElementById('payPriceTag');
+  if(tag){if(m==='usdc'){tag.textContent=_payPrice;tag.title='';}else{tag.textContent=_payPriceFiat;tag.title='Includes 5% processing fee';}}
+  var badge=document.getElementById('paySaveBadge');
+  if(badge) badge.style.display=(m==='usdc')?'':'none';
+  var btnAmt=document.getElementById('payBtnAmt');
+  if(btnAmt) btnAmt.textContent=(m==='usdc')?_payPrice:_payPriceFiat;
 }
 function setNet(el,net){
   document.querySelectorAll('.usdc-network').forEach(n=>n.classList.remove('active-net'));
@@ -1579,20 +1587,15 @@ function dismissTip() {
         <div class="pay-item-name" id="payItemName">Item</div>
         <div class="pay-item-by" id="payItemBy">creator.artroom</div>
       </div>
-      <div class="pay-price-tag" id="payPriceTag">$49</div>
+      <div><div class="pay-price-tag" id="payPriceTag">$49</div><span class="pay-save-badge" id="paySaveBadge">Save 5% with USDC</span></div>
     </div>
     <div class="pay-body" id="payBody">
       <div class="pay-methods">
-        <button class="pay-method-btn active" onclick="setPayMethod('apple',this)"><span>&#xF8FF;</span> Apple Pay</button>
-        <button class="pay-method-btn" onclick="setPayMethod('usdc',this)">◎ USDC</button>
+        <button class="pay-method-btn active" onclick="setPayMethod('usdc',this)">◎ USDC <span class="pay-save-tag">-5%</span></button>
+        <button class="pay-method-btn" onclick="setPayMethod('apple',this)"><span>&#xF8FF;</span> Apple Pay</button>
         <button class="pay-method-btn" onclick="setPayMethod('card',this)">▦ Card</button>
       </div>
-      <div class="pay-panel active" id="panel-apple">
-        <button class="apple-pay-btn" onclick="submitPay()"><span>&#xF8FF;</span> Pay</button>
-        <div class="pay-divider">or pay another way</div>
-        <p style="font-size:12px;color:#bbb;text-align:center;line-height:1.7">Apple Pay uses Face ID or Touch ID.<br>No card details entered manually.</p>
-      </div>
-      <div class="pay-panel" id="panel-usdc">
+      <div class="pay-panel active" id="panel-usdc">
         <div class="usdc-wrap">
           <div class="usdc-label-row">
             <div class="usdc-logo">USD<br>C</div>
@@ -1609,6 +1612,11 @@ function dismissTip() {
         </div>
         <p class="usdc-fee-note">Send exactly the amount shown · confirms in ~10s on Solana or Base</p>
         <button class="pay-submit" onclick="submitPay()">I've Sent the Payment →</button>
+      </div>
+      <div class="pay-panel" id="panel-apple">
+        <button class="apple-pay-btn" onclick="submitPay()"><span>&#xF8FF;</span> Pay</button>
+        <div class="pay-divider">or pay another way</div>
+        <p style="font-size:12px;color:#bbb;text-align:center;line-height:1.7">Apple Pay uses Face ID or Touch ID.<br>No card details entered manually.</p>
       </div>
       <div class="pay-panel" id="panel-card">
         <div class="pay-field"><label class="pay-label">Card Number</label><input class="pay-input" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"></div>
