@@ -166,16 +166,46 @@ const ArtWallet = {
      ───────────────────────────────────── */
   updateWalletButton: function() {
     var btn = document.getElementById('walletConnectBtn');
-    if (!btn) return;
-    if (this.isConnected()) {
-      btn.textContent = this.truncateAddress(this.getAddress());
-      btn.classList.add('connected');
-      btn.title = this.getAddress();
-    } else {
-      btn.innerHTML = '&#x25CE; Connect';
-      btn.classList.remove('connected');
-      btn.title = 'Connect Phantom wallet';
+    if (btn) {
+      if (this.isConnected()) {
+        btn.textContent = this.truncateAddress(this.getAddress());
+        btn.classList.add('connected');
+        btn.title = this.getAddress();
+      } else {
+        btn.innerHTML = '&#x25CE; Connect';
+        btn.classList.remove('connected');
+        btn.title = 'Connect Phantom wallet';
+      }
     }
+    // Also update marquee wallet buttons
+    var mqBtns = document.querySelectorAll('.mq-wallet-btn');
+    for (var i = 0; i < mqBtns.length; i++) {
+      if (this.isConnected()) {
+        mqBtns[i].textContent = this.truncateAddress(this.getAddress());
+        mqBtns[i].style.background = '#14F195';
+        mqBtns[i].style.color = '#0a0a0a';
+      } else {
+        mqBtns[i].innerHTML = '&#x25CE; Connect Wallet';
+        mqBtns[i].style.background = '#9945FF';
+        mqBtns[i].style.color = '#fff';
+      }
+    }
+  },
+
+  injectMarqueeWallet: function() {
+    var track = document.getElementById('marqTrack');
+    if (!track) return;
+    var items = track.querySelectorAll('.mq-item');
+    if (items.length === 0) return;
+    var half = Math.floor(items.length / 2);
+    var label = this.isConnected() ? this.truncateAddress(this.getAddress()) : '&#x25CE; Connect Wallet';
+    var bg = this.isConnected() ? '#14F195' : '#9945FF';
+    var tc = this.isConnected() ? '#0a0a0a' : '#fff';
+    var html = '<div class="mq-item"><button class="mq-btn mq-wallet-btn" style="background:' + bg + ';color:' + tc + '" onclick="ArtWallet.isConnected()?ArtWallet.disconnect():ArtWallet.connect()">' + label + '</button><span class="mq-dot">\u00b7</span></div>';
+    // Insert after last item of first half
+    if (half > 0 && items[half - 1]) items[half - 1].insertAdjacentHTML('afterend', html);
+    // Insert at end (second half)
+    track.insertAdjacentHTML('beforeend', html);
   },
 
   /* ─────────────────────────────────────
@@ -185,6 +215,10 @@ const ArtWallet = {
     this._ready = true;
     this.updateWalletButton();
 
+    // Inject wallet button into bottom marquee (delay to let page JS build it)
+    var self = this;
+    setTimeout(function() { self.injectMarqueeWallet(); }, 200);
+
     // Try silent reconnect if previously connected
     var savedAddr = localStorage.getItem('artroom_wallet');
     if (!savedAddr) return;
@@ -192,7 +226,6 @@ const ArtWallet = {
     var provider = this.getProvider();
     if (!provider) return;
 
-    var self = this;
     provider.connect({ onlyIfTrusted: true }).then(function(resp) {
       self._provider = provider;
       self._publicKey = resp.publicKey;
