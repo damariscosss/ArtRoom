@@ -6,6 +6,8 @@
 <title>ArtRoom</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <script src="state.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+<script src="solana.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -580,6 +582,36 @@ body {
 .pf-mc-hire:hover { background: var(--black); color: #fff; border-color: var(--black); }
 .pf-mc-hire-dot { width: 5px; height: 5px; border-radius: 50%; background: #A8E63D; flex-shrink: 0; }
 
+/* ══════════════════════════════
+   HIRE MESSAGE OVERLAY
+══════════════════════════════ */
+.msg-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.msg-box{background:#fff;border:1px solid #e5e5e5;border-radius:12px;width:480px;max-height:80vh;box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:flex;flex-direction:column}
+.msg-header{padding:16px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:12px}
+.msg-header-av{width:36px;height:36px;border-radius:50%;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.msg-header-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.msg-header-handle{font-size:10px;color:var(--gray)}
+.msg-close{margin-left:auto;width:32px;height:32px;border:1px solid #e5e5e5;border-radius:50%;background:none;cursor:pointer;font-size:14px;transition:background .15s}
+.msg-close:hover{background:#f0f0f0}
+.msg-body{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:360px}
+.msg-bub{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.msg-bub.them{background:#f5f5f5;color:#333;align-self:flex-start;border-bottom-left-radius:4px}
+.msg-bub.me{background:var(--black);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.msg-time{font-size:9px;color:#ccc;text-align:center;padding:4px 0}
+.msg-input-row{padding:14px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px}
+.msg-input{flex:1;border:1px solid #e5e5e5;border-radius:100px;padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s}
+.msg-input:focus{border-color:var(--black)}
+.msg-send{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 20px;border-radius:100px;background:var(--black);color:#fff;border:none;cursor:pointer;transition:opacity .2s}
+.msg-send:hover{opacity:.8}
+.msg-templates{display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.msg-tpl-btn{background:#fafafa;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:#333;cursor:pointer;text-align:left;transition:all .15s;line-height:1.5}
+.msg-tpl-btn:hover{border-color:var(--black);background:#f0f0f0}
+.msg-tpl-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:6px}
+.pricing-tip{position:fixed;bottom:120px;right:calc(50% - 300px);z-index:810;background:#fff;border:1.5px solid #fde68a;border-radius:10px;padding:14px 18px;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.12);animation:tipSlideIn .3s ease-out;font-size:12px;line-height:1.6;color:#333}
+.pricing-tip-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#92400e;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.pricing-tip-close{position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;color:#bbb;font-size:12px;padding:2px}
+.pricing-tip-close:hover{color:#333}
+@keyframes tipSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 /* ══════════════════════════════
    PAYMENT MODAL
@@ -882,6 +914,7 @@ body {
   </div>
 
   <div class="nav-right">
+    <button class="wallet-btn" id="walletConnectBtn" onclick="ArtWallet.isConnected()?ArtWallet.disconnect():ArtWallet.connect()">&#x25CE; Connect</button>
     <div class="sign-wrap">
       <div class="sign-chain">
         <div class="chain-link"></div>
@@ -1247,8 +1280,8 @@ PORTFOLIOS_DATA.forEach((p, i) => {
         <a class="pf-mc-by" href="${p.by === 'maya' ? 'artroom-studio.html' : 'artroom-artist.html?handle=' + p.by}" onclick="event.stopPropagation()" style="text-decoration:none;color:inherit">${p.by}.artroom</a>
         <span class="pf-mc-price">${p.price}</span>
       </div>
-      <span class="pf-mc-hire" onclick="event.stopPropagation();goTo('artroom-jobs.html')">
-        <span class="pf-mc-hire-dot"></span>Hire ${p.av === 'M' || p.av === 'J' ? p.by.charAt(0).toUpperCase()+p.by.slice(1) : p.by.charAt(0).toUpperCase()+p.by.slice(1)} →
+      <span class="pf-mc-hire" onclick="event.stopPropagation();openHireMsg(${i})">
+        <span class="pf-mc-hire-dot"></span>Hire ${p.by.charAt(0).toUpperCase()+p.by.slice(1)} →
       </span>
     </div>`;
   el.addEventListener('click', () => openPay(p.proj, p.price, p.by));
@@ -1346,9 +1379,11 @@ function goTo(p) {
 const MQ=[
   {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#E8001A', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
   {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#FF5F1F', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
 ];
 const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
@@ -1400,7 +1435,140 @@ function submitPay(){
   document.getElementById('paySuccess').style.display='block';
   document.getElementById('paySuccessItem').textContent=_payItem;
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closePay();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePay();closeHireMsg();}});
+
+/* ─────────────────────────────
+   HIRE MESSAGE POPUP
+───────────────────────────── */
+var _hireArtist = null;
+
+/* Build artist name lookup from STUDIOS */
+var ARTIST_NAMES = {};
+STUDIOS.forEach(function(s) { ARTIST_NAMES[s.handle] = s.name; });
+
+function openHireMsg(idx) {
+  var p = PORTFOLIOS_DATA[idx];
+  if (!p) return;
+  var handle = p.by;
+  var fullName = ARTIST_NAMES[handle] || (handle.charAt(0).toUpperCase() + handle.slice(1));
+  _hireArtist = { handle: handle, name: fullName, avBg: p.avBg, avTc: p.avTc, av: p.av };
+
+  var av = document.getElementById('msgAv');
+  av.style.background = p.avBg;
+  av.style.color = p.avTc;
+  av.textContent = p.av;
+  document.getElementById('msgName').textContent = fullName;
+  document.getElementById('msgHandle').textContent = '@' + handle + '.artroom';
+
+  var convoId = 'convo_' + handle;
+  ArtState.addConversation({
+    id: convoId,
+    artistName: fullName,
+    artistHandle: handle,
+    artistAvBg: p.avBg,
+    artistAvTc: p.avTc,
+    lastMessage: '',
+    lastTime: Date.now()
+  });
+
+  var body = document.getElementById('msgBody');
+  var existingMsgs = ArtState.getMessages(convoId);
+
+  if (existingMsgs.length) {
+    body.innerHTML = '<div class="msg-time">Today</div>';
+    existingMsgs.forEach(function(m) {
+      body.innerHTML += '<div class="msg-bub ' + (m.from === 'me' ? 'me' : 'them') + '">' + m.text + '</div>';
+    });
+  } else {
+    body.innerHTML = '<div class="msg-time">Today</div>' +
+      '<div class="msg-tpl-label">Choose a way to start the conversation</div>' +
+      '<div class="msg-templates">' +
+      '<button class="msg-tpl-btn" onclick="sendHireTemplate(this)">I\'d love to commission you for a project</button>' +
+      '<button class="msg-tpl-btn" onclick="sendHireTemplate(this)">Are you available for freelance work?</button>' +
+      '<button class="msg-tpl-btn" onclick="sendHireTemplate(this)">I have a collaboration idea I\'d like to discuss</button>' +
+      '<button class="msg-tpl-btn" onclick="sendHireTemplate(this)">Quick question about your work</button>' +
+      '</div>';
+  }
+
+  document.getElementById('msgOverlay').style.display = 'flex';
+  document.getElementById('msgInput').focus();
+  setTimeout(function() { body.scrollTop = body.scrollHeight; }, 50);
+}
+
+function closeHireMsg() {
+  document.getElementById('msgOverlay').style.display = 'none';
+  dismissTip();
+}
+
+function sendHireTemplate(btn) {
+  if (!_hireArtist) return;
+  var txt = btn.textContent;
+  var body = document.getElementById('msgBody');
+  var tplLabel = body.querySelector('.msg-tpl-label');
+  var tplBtns = body.querySelector('.msg-templates');
+  if (tplLabel) tplLabel.remove();
+  if (tplBtns) tplBtns.remove();
+
+  body.innerHTML += '<div class="msg-bub me">' + txt + '</div>';
+  body.scrollTop = body.scrollHeight;
+
+  var convoId = 'convo_' + _hireArtist.handle;
+  ArtState.addMessage(convoId, { from: 'me', text: txt });
+}
+
+function sendHireMessage() {
+  if (!_hireArtist) return;
+  var inp = document.getElementById('msgInput');
+  var txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+
+  var body = document.getElementById('msgBody');
+  var tplLabel = body.querySelector('.msg-tpl-label');
+  var tplBtns = body.querySelector('.msg-templates');
+  if (tplLabel) tplLabel.remove();
+  if (tplBtns) tplBtns.remove();
+
+  body.innerHTML += '<div class="msg-bub me">' + txt.replace(/</g,'&lt;') + '</div>';
+  body.scrollTop = body.scrollHeight;
+
+  var convoId = 'convo_' + _hireArtist.handle;
+  ArtState.addMessage(convoId, { from: 'me', text: txt });
+  checkPricingTip(txt);
+}
+
+/* ── AI Pricing Advisor ── */
+var tipTimeout = null;
+
+function checkPricingTip(text) {
+  var dollarMatch = text.match(/\$(\d[\d,]*)/);
+  var pricingWords = ['pay you', 'budget is', 'budget of', 'rate', 'quote', 'offer', 'charge', 'price', 'cost', 'compensation', 'paying', 'willing to pay'];
+  var hasPricingLanguage = pricingWords.some(function(w) { return text.toLowerCase().includes(w); });
+  if (!dollarMatch && !hasPricingLanguage) return;
+
+  var tipHtml = '<div class="pricing-tip">' +
+    '<button class="pricing-tip-close" onclick="dismissTip()">&#x2715;</button>' +
+    '<div class="pricing-tip-title">&#x1F4A1; ArtRoom Tip</div>';
+
+  if (dollarMatch) {
+    var offered = parseInt(dollarMatch[1].replace(/,/g, ''));
+    var marketLow = Math.round(offered * 1.5 / 5) * 5;
+    var marketHigh = Math.round(offered * 2.5 / 5) * 5;
+    tipHtml += '<div>They\'re offering <strong>$' + offered + '</strong> for this work. Similar projects on ArtRoom typically go for <strong>$' + marketLow + '&ndash;$' + marketHigh + '</strong>.</div>';
+  } else {
+    tipHtml += '<div>This looks like a pricing discussion. Check <strong>ArtRoom market data</strong> before committing to a rate.</div>';
+  }
+  tipHtml += '</div>';
+
+  document.getElementById('pricingTipContainer').innerHTML = tipHtml;
+  if (tipTimeout) clearTimeout(tipTimeout);
+  tipTimeout = setTimeout(dismissTip, 8000);
+}
+
+function dismissTip() {
+  document.getElementById('pricingTipContainer').innerHTML = '';
+  if (tipTimeout) { clearTimeout(tipTimeout); tipTimeout = null; }
+}
 
 </script><!-- ═══ PAYMENT MODAL ═══ -->
 <div class="pay-overlay" id="payOverlay" onclick="if(event.target===this)closePay()">
@@ -1460,6 +1628,30 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closePay();});
     </div>
   </div>
 </div>
+
+<!-- ═══ HIRE MESSAGE OVERLAY ═══ -->
+<div class="msg-overlay" id="msgOverlay" onclick="if(event.target===this)closeHireMsg()">
+  <div class="msg-box">
+    <div class="msg-header">
+      <div class="msg-header-av" id="msgAv"></div>
+      <div>
+        <div class="msg-header-name" id="msgName"></div>
+        <div class="msg-header-handle" id="msgHandle"></div>
+      </div>
+      <button class="msg-close" onclick="closeHireMsg()">&#x2715;</button>
+    </div>
+    <div class="msg-body" id="msgBody">
+      <div class="msg-time">Today</div>
+    </div>
+    <div class="msg-input-row">
+      <input class="msg-input" id="msgInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendHireMessage()">
+      <button class="msg-send" onclick="sendHireMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING TIP CONTAINER -->
+<div id="pricingTipContainer"></div>
 
 <div id="toast" style="position:fixed;bottom:68px;right:28px;z-index:500;background:#0a0a0a;color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:12px 22px;border-radius:100px;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap"></div>
 

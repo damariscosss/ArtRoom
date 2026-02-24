@@ -6,6 +6,8 @@
 <title>ArtRoom — Artist</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <script src="state.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+<script src="solana.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--nav-h:56px}
@@ -20,10 +22,10 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
 .nav-right{display:flex;justify-content:flex-end;align-items:flex-end}
 .sign-wrap{display:flex;flex-direction:column;align-items:center}
 .sign-chain{display:flex;flex-direction:column;align-items:center;gap:1px;padding-top:5px}
-.chain-link{width:7px;height:4px;border:1.5px solid #ccc;border-radius:50%}
+.chain-link{width:7px;height:4px;border:1.5px solid rgba(27,79,232,.4);border-radius:50%}
 .chain-link:nth-child(odd){transform:rotate(90deg)}
 .sign-board{display:block;text-align:center;padding:8px 18px 10px;border:1.5px solid var(--black);border-radius:7px;background:#fff;cursor:pointer;transform-origin:top center;animation:signRock 3.8s ease-in-out infinite;user-select:none;min-width:118px;position:relative}
-.sign-board::before{content:'';position:absolute;top:-2px;left:14px;right:14px;height:5px;background:#fff;z-index:1}
+.sign-board::before{content:'';position:absolute;top:-2px;left:14px;right:14px;height:5px;background:#1B4FE8;z-index:1}
 .sign-text{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--black);display:block;line-height:1}
 .sign-sub{font-family:'DM Sans',sans-serif;font-size:8px;font-weight:300;letter-spacing:.13em;text-transform:uppercase;color:#bbb;display:block;margin-top:4px;line-height:1}
 .sign-dots{display:flex;justify-content:center;gap:4px;margin-top:7px}
@@ -48,6 +50,42 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
 .follow-btn:hover{opacity:.85}
 .follow-btn.following{background:#fff;color:var(--black);border-color:var(--border)}
 .follow-btn.following:hover{border-color:var(--black)}
+.hire-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 28px;border-radius:100px;border:1.5px solid var(--border);background:#fff;color:var(--black);cursor:pointer;transition:all .2s}
+.hire-btn:hover{border-color:var(--black);background:var(--black);color:#fff}
+.profile-btns{display:flex;gap:10px;align-items:center}
+
+/* MESSAGE PANEL */
+.msg-overlay{display:none;position:fixed;inset:0;z-index:800;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.msg-box{background:#fff;border:1px solid #e5e5e5;border-radius:12px;width:480px;max-height:80vh;box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:flex;flex-direction:column}
+.msg-header{padding:16px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;gap:12px}
+.msg-header-av{width:36px;height:36px;border-radius:50%;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.msg-header-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.msg-header-handle{font-size:10px;color:var(--gray)}
+.msg-close{margin-left:auto;width:32px;height:32px;border:1px solid #e5e5e5;border-radius:50%;background:none;cursor:pointer;font-size:14px;transition:background .15s}
+.msg-close:hover{background:#f0f0f0}
+.msg-body{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:360px}
+.msg-bub{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.msg-bub.them{background:#f5f5f5;color:#333;align-self:flex-start;border-bottom-left-radius:4px}
+.msg-bub.me{background:var(--black);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.msg-time{font-size:9px;color:#ccc;text-align:center;padding:4px 0}
+.msg-input-row{padding:14px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px}
+.msg-input{flex:1;border:1px solid #e5e5e5;border-radius:100px;padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s}
+.msg-input:focus{border-color:var(--black)}
+.msg-send{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:9px 20px;border-radius:100px;background:var(--black);color:#fff;border:none;cursor:pointer;transition:opacity .2s}
+.msg-send:hover{opacity:.8}
+
+/* MESSAGE TEMPLATES */
+.msg-templates{display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.msg-tpl-btn{background:#fafafa;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:#333;cursor:pointer;text-align:left;transition:all .15s;line-height:1.5}
+.msg-tpl-btn:hover{border-color:var(--black);background:#f0f0f0}
+.msg-tpl-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:6px}
+
+/* PRICING TIP */
+.pricing-tip{position:fixed;bottom:120px;right:calc(50% - 300px);z-index:810;background:#fff;border:1.5px solid #fde68a;border-radius:10px;padding:14px 18px;max-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.12);animation:tipSlideIn .3s ease-out;font-size:12px;line-height:1.6;color:#333}
+.pricing-tip-title{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#92400e;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.pricing-tip-close{position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;color:#bbb;font-size:12px;padding:2px}
+.pricing-tip-close:hover{color:#333}
+@keyframes tipSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* BANNER STRIP */
 .banner-strip{display:flex;height:6px}
@@ -136,11 +174,12 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
   </div>
   <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
   <div class="nav-right">
+    <button class="wallet-btn" id="walletConnectBtn" onclick="ArtWallet.isConnected()?ArtWallet.disconnect():ArtWallet.connect()">&#x25CE; Connect</button>
     <div class="sign-wrap">
       <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
-      <div class="sign-board" onclick="window.location.href='artroom-studio.html'">
-        <span class="sign-text">Open Studio</span><span class="sign-sub">Enter your space</span>
-        <div class="sign-dots"><div class="sign-dot"></div><div class="sign-dot"></div><div class="sign-dot"></div></div>
+      <div class="sign-board" onclick="openMessages()" style="border-color:#1B4FE8;background:#1B4FE8">
+        <span class="sign-text" style="color:#fff">Hire Me</span><span class="sign-sub" style="color:rgba(255,255,255,.6)">Send a message</span>
+        <div class="sign-dots"><div class="sign-dot" style="background:rgba(255,255,255,.5)"></div><div class="sign-dot" style="background:rgba(255,255,255,.5)"></div><div class="sign-dot" style="background:rgba(255,255,255,.5)"></div></div>
       </div>
     </div>
   </div>
@@ -154,6 +193,30 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- MESSAGE PANEL -->
+<div class="msg-overlay" id="msgOverlay" onclick="if(event.target===this)closeMessages()">
+  <div class="msg-box">
+    <div class="msg-header">
+      <div class="msg-header-av" id="msgAv"></div>
+      <div>
+        <div class="msg-header-name" id="msgName"></div>
+        <div class="msg-header-handle" id="msgHandle"></div>
+      </div>
+      <button class="msg-close" onclick="closeMessages()">&#x2715;</button>
+    </div>
+    <div class="msg-body" id="msgBody">
+      <div class="msg-time">Today</div>
+    </div>
+    <div class="msg-input-row">
+      <input class="msg-input" id="msgInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="msg-send" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING TIP CONTAINER -->
+<div id="pricingTipContainer"></div>
 
 <!-- PAYMENT MODAL -->
 <div class="pay-overlay" id="payOverlay" onclick="if(event.target===this)closePay()">
@@ -294,7 +357,10 @@ if (!artist) {
         <div><span class="ps-n">${artist.works}</span><span class="ps-l">Works</span></div>
         <div><span class="ps-n">${artist.followers}</span><span class="ps-l">Followers</span></div>
       </div>
-      <button class="follow-btn ${isFollowing ? 'following' : ''}" id="followBtn" onclick="toggleFollow()">${isFollowing ? 'Following' : 'Follow'}</button>
+      <div class="profile-btns">
+        <button class="follow-btn ${isFollowing ? 'following' : ''}" id="followBtn" onclick="toggleFollow()">${isFollowing ? 'Following' : 'Follow'}</button>
+        <button class="hire-btn" onclick="openMessages()">Hire ${artist.name.split(' ')[0]}</button>
+      </div>
     </div>
   `;
 
@@ -386,7 +452,128 @@ function submitPay() {
   document.getElementById('paySuccessItem').textContent = _payItem;
   ArtState.addPurchase({ title: _payItem, price: _payPrice, by: _payBy });
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closePay(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePay(); closeMessages(); } });
+
+/* ── Messages ── */
+
+function openMessages() {
+  if (!artist) return;
+  const av = document.getElementById('msgAv');
+  av.style.background = artist.avBg;
+  av.style.color = artist.avTc;
+  av.textContent = artist.av;
+  document.getElementById('msgName').textContent = artist.name;
+  document.getElementById('msgHandle').textContent = '@' + artist.handle + '.artroom';
+
+  const convoId = 'convo_' + artist.handle;
+  ArtState.addConversation({
+    id: convoId,
+    artistName: artist.name,
+    artistHandle: artist.handle,
+    artistAvBg: artist.avBg,
+    artistAvTc: artist.avTc,
+    lastMessage: '',
+    lastTime: Date.now()
+  });
+
+  const body = document.getElementById('msgBody');
+  const existingMsgs = ArtState.getMessages(convoId);
+
+  if (existingMsgs.length) {
+    body.innerHTML = '<div class="msg-time">Today</div>';
+    existingMsgs.forEach(function(m) {
+      body.innerHTML += '<div class="msg-bub ' + (m.from === 'me' ? 'me' : 'them') + '">' + m.text + '</div>';
+    });
+  } else {
+    const firstName = artist.name.split(' ')[0];
+    body.innerHTML = '<div class="msg-time">Today</div>' +
+      '<div class="msg-tpl-label">Choose a way to start the conversation</div>' +
+      '<div class="msg-templates">' +
+      '<button class="msg-tpl-btn" onclick="sendTemplate(this)">I\'d love to commission you for a project</button>' +
+      '<button class="msg-tpl-btn" onclick="sendTemplate(this)">Are you available for freelance work?</button>' +
+      '<button class="msg-tpl-btn" onclick="sendTemplate(this)">I have a collaboration idea I\'d like to discuss</button>' +
+      '<button class="msg-tpl-btn" onclick="sendTemplate(this)">Quick question about your work</button>' +
+      '</div>';
+  }
+
+  document.getElementById('msgOverlay').style.display = 'flex';
+  document.getElementById('msgInput').focus();
+  setTimeout(function() { body.scrollTop = body.scrollHeight; }, 50);
+}
+
+function closeMessages() {
+  document.getElementById('msgOverlay').style.display = 'none';
+  dismissTip();
+}
+
+function sendTemplate(btn) {
+  const txt = btn.textContent;
+  const body = document.getElementById('msgBody');
+  const tplLabel = body.querySelector('.msg-tpl-label');
+  const tplBtns = body.querySelector('.msg-templates');
+  if (tplLabel) tplLabel.remove();
+  if (tplBtns) tplBtns.remove();
+
+  body.innerHTML += '<div class="msg-bub me">' + txt + '</div>';
+  body.scrollTop = body.scrollHeight;
+
+  const convoId = 'convo_' + artist.handle;
+  ArtState.addMessage(convoId, { from: 'me', text: txt });
+}
+
+function sendMessage() {
+  const inp = document.getElementById('msgInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+
+  const body = document.getElementById('msgBody');
+  const tplLabel = body.querySelector('.msg-tpl-label');
+  const tplBtns = body.querySelector('.msg-templates');
+  if (tplLabel) tplLabel.remove();
+  if (tplBtns) tplBtns.remove();
+
+  body.innerHTML += '<div class="msg-bub me">' + txt.replace(/</g,'&lt;') + '</div>';
+  body.scrollTop = body.scrollHeight;
+
+  const convoId = 'convo_' + artist.handle;
+  ArtState.addMessage(convoId, { from: 'me', text: txt });
+  checkPricingTip(txt);
+}
+
+/* ── AI Pricing Advisor ── */
+let tipTimeout = null;
+
+function checkPricingTip(text) {
+  const dollarMatch = text.match(/\$(\d[\d,]*)/);
+  const pricingWords = ['pay you', 'budget is', 'budget of', 'rate', 'quote', 'offer', 'charge', 'price', 'cost', 'compensation', 'paying', 'willing to pay'];
+  const hasPricingLanguage = pricingWords.some(function(w) { return text.toLowerCase().includes(w); });
+  if (!dollarMatch && !hasPricingLanguage) return;
+
+  let tipHtml = '<div class="pricing-tip">' +
+    '<button class="pricing-tip-close" onclick="dismissTip()">&#x2715;</button>' +
+    '<div class="pricing-tip-title">&#x1F4A1; ArtRoom Tip</div>';
+
+  if (dollarMatch) {
+    const offered = parseInt(dollarMatch[1].replace(/,/g, ''));
+    const marketLow = Math.round(offered * 1.5 / 5) * 5;
+    const marketHigh = Math.round(offered * 2.5 / 5) * 5;
+    tipHtml += '<div>They\'re offering <strong>$' + offered + '</strong> for this work. Similar projects on ArtRoom typically go for <strong>$' + marketLow + '&ndash;$' + marketHigh + '</strong>.</div>';
+  } else {
+    tipHtml += '<div>This looks like a pricing discussion. Check <strong>ArtRoom market data</strong> before committing to a rate.</div>';
+  }
+  tipHtml += '</div>';
+
+  document.getElementById('pricingTipContainer').innerHTML = tipHtml;
+  if (tipTimeout) clearTimeout(tipTimeout);
+  tipTimeout = setTimeout(dismissTip, 8000);
+}
+
+function dismissTip() {
+  const c = document.getElementById('pricingTipContainer');
+  if (c) c.innerHTML = '';
+  if (tipTimeout) { clearTimeout(tipTimeout); tipTimeout = null; }
+}
 </script>
 </body>
 </html>

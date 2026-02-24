@@ -68,6 +68,36 @@ const ArtState = {
   },
   hasApplied(jobId) { return this.getApplications().some(a => a.id === jobId); },
 
+  /* ── Conversations & Messages ── */
+  getConversations() { return this._get('conversations'); },
+  getConversation(convoId) { return this.getConversations().find(c => c.id === convoId) || null; },
+  addConversation(convo) {
+    const list = this.getConversations();
+    if (!list.some(c => c.id === convo.id)) { list.push(convo); this._set('conversations', list); }
+    return convo;
+  },
+  updateConversation(convoId, updates) {
+    const list = this.getConversations();
+    const idx = list.findIndex(c => c.id === convoId);
+    if (idx > -1) { Object.assign(list[idx], updates); this._set('conversations', list); }
+  },
+  getMessages(convoId) { return this._get('messages_' + convoId); },
+  addMessage(convoId, msg) {
+    const list = this._get('messages_' + convoId);
+    list.push({ ...msg, time: Date.now() });
+    this._set('messages_' + convoId, list);
+    this.updateConversation(convoId, { lastMessage: msg.text, lastTime: Date.now() });
+    return list;
+  },
+
+  /* ── Posted Jobs ── */
+  getPostedJobs() { return this._get('posted_jobs'); },
+  addPostedJob(job) {
+    const list = this.getPostedJobs();
+    list.push({ ...job, date: Date.now() });
+    this._set('posted_jobs', list);
+  },
+
   /* ── Cart ── */
   getCart()       { return this._get('cart'); },
   addToCart(item) {

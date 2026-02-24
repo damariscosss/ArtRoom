@@ -6,6 +6,8 @@
 <title>ArtRoom — Jobs</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="state.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+<script src="solana.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--red:#E8001A;--nav-h:56px;--bar-h:50px}
@@ -154,6 +156,56 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
 .mq-btn{font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:8px 22px;border-radius:100px;border:none;cursor:pointer;transition:opacity .2s,transform .15s}
 .mq-btn:hover{opacity:.8;transform:scale(.96)}
 .mq-dot{color:#ddd;font-size:20px;user-select:none}
+/* ── POST JOB MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;z-index:800;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.modal-box{background:#fff;border:1px solid #e5e5e5;border-radius:10px;width:560px;max-height:88vh;box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:flex;flex-direction:column}
+.modal-head{padding:20px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.modal-close{width:32px;height:32px;border:1px solid #e5e5e5;border-radius:50%;background:none;cursor:pointer;font-size:14px;transition:background .15s}
+.modal-close:hover{background:#f0f0f0}
+.modal-body{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.modal-foot{padding:16px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0}
+.form-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:4px;display:block}
+.form-inp{width:100%;border:1px solid #e5e5e5;border-radius:6px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s}
+.form-inp:focus{border-color:var(--black)}
+.form-textarea{width:100%;border:1px solid #e5e5e5;border-radius:6px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s;resize:vertical;min-height:80px}
+.form-textarea:focus{border-color:var(--black)}
+.pj-type-row{display:flex;gap:6px;flex-wrap:wrap}
+.pj-type-btn{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:7px 16px;border-radius:100px;border:1.5px solid var(--border);background:#fff;color:var(--gray);cursor:pointer;transition:all .15s}
+.pj-type-btn:hover{border-color:var(--black);color:var(--black)}
+.pj-type-btn.active{background:var(--black);color:#fff;border-color:var(--black)}
+.pj-helper{font-size:10px;color:var(--gray);line-height:1.5;margin-top:2px}
+.pj-review{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;gap:16px}
+.pj-review-dot{width:16px;height:16px;border-radius:50%;background:var(--black);animation:reviewPulse 1.4s ease-in-out infinite}
+@keyframes reviewPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.4}}
+.pj-review-text{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.pj-review-sub{font-size:12px;color:var(--gray)}
+.pj-flagged{display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:12px}
+
+/* ── JOB DETAIL OVERLAY ── */
+.jdo-bg{display:none;position:fixed;inset:0;z-index:600;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.jdo-box{background:#fff;border:1px solid #e5e5e5;border-radius:12px;width:580px;max-width:92vw;max-height:85vh;box-shadow:0 20px 60px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column}
+.jdo-head{padding:22px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:flex-start;gap:14px;flex-shrink:0}
+.jdo-head-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--border);background:#fff;flex-shrink:0}
+.jdo-head-info{flex:1}
+.jdo-head-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.jdo-head-meta{font-size:12px;color:var(--gray);display:flex;flex-wrap:wrap;gap:8px}
+.jdo-close{margin-left:auto;width:32px;height:32px;border:1px solid #e5e5e5;border-radius:50%;background:none;cursor:pointer;font-size:14px;transition:background .15s;flex-shrink:0}
+.jdo-close:hover{background:#f0f0f0}
+.jdo-body{padding:24px;overflow-y:auto;flex:1}
+.jdo-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.jdo-tag{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:100px}
+.jdo-pay{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px}
+.jdo-type{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:100px;background:#f5f5f5;border:1px solid #e8e8e8;color:#888;display:inline-block;margin-bottom:20px}
+.jdo-section-label{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#bbb;margin-bottom:10px;margin-top:22px;display:flex;align-items:center;gap:10px}
+.jdo-section-label::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.jdo-desc{font-size:13px;font-weight:300;line-height:1.8;color:#444;margin-bottom:8px}
+.jdo-foot{padding:16px 24px;border-top:1px solid #e5e5e5;display:flex;gap:10px;flex-shrink:0}
+.jdo-apply{flex:1;padding:14px;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:none;border-radius:100px;cursor:pointer;transition:background .2s,transform .15s}
+.jdo-apply:hover{background:#333;transform:translateY(-1px)}
+.jdo-save{padding:14px 20px;border:1.5px solid var(--border);background:#fff;border-radius:100px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:border-color .2s}
+.jdo-save:hover{border-color:var(--black)}
+
 .toast{position:fixed;bottom:68px;right:28px;z-index:500;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:12px 22px;border-radius:100px;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 </style>
@@ -166,6 +218,7 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
   </div>
   <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
   <div class="nav-right">
+    <button class="wallet-btn" id="walletConnectBtn" onclick="ArtWallet.isConnected()?ArtWallet.disconnect():ArtWallet.connect()">&#x25CE; Connect</button>
     <div class="sign-wrap">
       <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
       <div class="sign-board" onclick="goTo('artroom-studio.html')">
@@ -186,7 +239,7 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
       <p class="hero-sub">Companies browse your ArtRoom Studio — your designs, your AI skills, your work — and reach out directly. No resume needed. Your portfolio speaks for itself.</p>
       <div class="hero-cta-row">
         <button class="btn btn-black" onclick="goTo('artroom-studio.html')">Open My Studio →</button>
-        <button class="btn btn-out" onclick="document.getElementById('postForm').scrollIntoView({behavior:'smooth'})">Post a Job</button>
+        <button class="btn btn-out" onclick="openPostJobModal()">Post a Job</button>
       </div>
     </div>
     <div class="hero-visual">
@@ -258,13 +311,105 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
       <div class="pb-title">Find talent with verified skills</div>
       <p class="pb-sub">Post a role and instantly browse candidates whose ArtRoom portfolios and Skill Vault match your requirements. Every applicant comes with proof of work.</p>
     </div>
-    <button class="pb-btn" onclick="showToast('Job posting coming soon!')">Post a Role →</button>
+    <button class="pb-btn" onclick="openPostJobModal()">Post a Role →</button>
   </div>
 
 </div>
 
+<!-- JOB DETAIL OVERLAY -->
+<div class="jdo-bg" id="jdOverlay" onclick="if(event.target===this)closeJobDetail()">
+  <div class="jdo-box">
+    <div class="jdo-head">
+      <div class="jdo-head-logo" id="jdoLogo"></div>
+      <div class="jdo-head-info">
+        <div class="jdo-head-title" id="jdoTitle"></div>
+        <div class="jdo-head-meta" id="jdoMeta"></div>
+      </div>
+      <button class="jdo-close" onclick="closeJobDetail()">&#x2715;</button>
+    </div>
+    <div class="jdo-body" id="jdoBody"></div>
+    <div class="jdo-foot">
+      <button class="jdo-apply" id="jdoApplyBtn">Apply with Portfolio →</button>
+      <button class="jdo-save" onclick="showToast('Job saved to your Studio')">☆ Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="bottom-bar"><div class="marq-track" id="marqTrack"></div></div>
 <div class="toast" id="toast"></div>
+
+<!-- POST JOB MODAL -->
+<div class="modal-bg" id="postJobModal" onclick="if(event.target===this)closePostJobModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-title">Post a Job</span>
+      <button class="modal-close" onclick="closePostJobModal()">&#x2715;</button>
+    </div>
+
+    <!-- Form Content -->
+    <div class="modal-body" id="pjFormContent">
+      <div>
+        <span class="form-label">Job Title *</span>
+        <input class="form-inp" id="pjTitle" placeholder="e.g. Senior Brand Designer">
+      </div>
+      <div>
+        <span class="form-label">Company Name *</span>
+        <input class="form-inp" id="pjCompany" placeholder="e.g. Haus Studio">
+      </div>
+      <div>
+        <span class="form-label">Company Website</span>
+        <input class="form-inp" id="pjWebsite" placeholder="e.g. https://hausstudio.com">
+        <div class="pj-helper">&#x1F517; Connect your website to auto-sync future job posts to ArtRoom</div>
+      </div>
+      <div>
+        <span class="form-label">Location</span>
+        <input class="form-inp" id="pjLocation" placeholder="e.g. New York, Remote">
+      </div>
+      <div>
+        <span class="form-label">Job Type</span>
+        <div class="pj-type-row">
+          <button class="pj-type-btn active" data-type="full-time" onclick="selectJobType(this)">Full-time</button>
+          <button class="pj-type-btn" data-type="freelance" onclick="selectJobType(this)">Freelance</button>
+          <button class="pj-type-btn" data-type="gig" onclick="selectJobType(this)">Gig</button>
+          <button class="pj-type-btn" data-type="remote" onclick="selectJobType(this)">Remote</button>
+        </div>
+      </div>
+      <div>
+        <span class="form-label">Pay Range</span>
+        <input class="form-inp" id="pjPay" placeholder="e.g. $60-90/hr or $90-120k/yr">
+      </div>
+      <div>
+        <span class="form-label">Description *</span>
+        <textarea class="form-textarea" id="pjDesc" placeholder="Describe the role, responsibilities, and what you're looking for..." rows="4"></textarea>
+      </div>
+      <div>
+        <span class="form-label">Required Skills / Tags</span>
+        <input class="form-inp" id="pjTags" placeholder="e.g. Branding, Figma, UI Systems (comma separated)">
+      </div>
+    </div>
+
+    <!-- AI Review State -->
+    <div class="pj-review" id="pjReviewing">
+      <div class="pj-review-dot"></div>
+      <div class="pj-review-text">ArtRoom AI is reviewing your posting&hellip;</div>
+      <div class="pj-review-sub">Checking for legitimacy, completeness, and quality</div>
+    </div>
+
+    <!-- Flagged State -->
+    <div class="pj-flagged" id="pjFlagged">
+      <div style="font-size:36px">&#x1F6A9;</div>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Flagged for Review</div>
+      <div style="font-size:12px;color:var(--gray);line-height:1.6;max-width:320px">Our team will review this posting within 24 hours. You'll be notified once it's approved or if we need more information.</div>
+      <button class="fpill" style="background:var(--black);color:#fff;margin-top:12px;padding:10px 24px" onclick="closePostJobModal()">Got it</button>
+    </div>
+
+    <!-- Footer (only shown during form) -->
+    <div class="modal-foot" id="pjFooter">
+      <button class="fpill" style="background:#fff;color:var(--black);border:1.5px solid var(--border);padding:8px 18px" onclick="closePostJobModal()">Cancel</button>
+      <button class="fpill" style="background:var(--black);color:#fff;padding:8px 18px" onclick="submitJobPost()">Submit for Review &#x2192;</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const JOBS = [
@@ -466,7 +611,7 @@ function renderList() {
         <span class="jr-type">${j.type}</span>
         ${j.isnew ? '<div class="jr-new">NEW</div>' : ''}
       </div>`;
-    el.addEventListener('click', () => { activeId = j.id; renderList(); renderDetail(j); });
+    el.addEventListener('click', () => { activeId = j.id; renderList(); renderDetail(j); openJobDetail(j); });
     wrap.appendChild(el);
   });
 }
@@ -563,18 +708,211 @@ renderDetail = function(j) {
 renderList();
 renderDetail(JOBS[0]);
 
+/* ── Job Detail Overlay ── */
+let _jdoJob = null;
+function openJobDetail(j) {
+  _jdoJob = j;
+  document.getElementById('jdoLogo').textContent = j.logo;
+  document.getElementById('jdoTitle').textContent = j.title;
+  document.getElementById('jdoMeta').innerHTML = '<span>🏢 ' + j.co + '</span><span>📍 ' + j.loc + '</span><span>💰 ' + j.pay + '</span>';
+
+  var body = document.getElementById('jdoBody');
+  body.innerHTML = '<div class="jdo-tags">' + j.tags.map(function(t){ return '<span class="jdo-tag" style="background:' + t.bg + ';color:' + t.tc + '">' + t.t + '</span>'; }).join('') + '</div>' +
+    '<div class="jdo-pay">' + j.pay + '</div>' +
+    '<span class="jdo-type">' + j.type + '</span>' +
+    '<div class="jdo-section-label">About the Role</div>' +
+    '<p class="jdo-desc">' + j.desc + '</p>';
+
+  if (j.skills && j.skills.length) {
+    body.innerHTML += '<div class="jdo-section-label">Required Skills</div>' +
+      j.skills.map(function(s) {
+        return '<div class="skill-match-row" style="margin-bottom:8px">' +
+          '<div class="sm-icon" style="background:' + s.iconBg + '">' + s.icon + '</div>' +
+          '<span class="sm-name">' + s.name + '</span>' +
+          (s.have ? '<span class="sm-status sm-have">✓ Installed</span>' : '<span class="sm-status sm-get" onclick="goTo(\'artroom-skill-vault.html\')">Get it →</span>') +
+        '</div>';
+      }).join('');
+  }
+
+  if (j.candidates && j.candidates.length) {
+    body.innerHTML += '<div class="jdo-section-label">Portfolio Matches</div>' +
+      j.candidates.map(function(c) {
+        return '<div class="pf-mini" style="margin-bottom:8px" onclick="goTo(NAME2HANDLE[\'' + c.name + '\']===\'maya\'?\'artroom-studio.html\':\'artroom-artist.html?handle=\'+NAME2HANDLE[\'' + c.name + '\'])">' +
+          '<div class="pf-mini-av" style="background:' + c.avBg + ';color:' + c.avTc + '">' + c.av + '</div>' +
+          '<span class="pf-mini-name">' + c.name + '</span>' +
+          '<span class="pf-mini-works">' + c.works + '</span>' +
+        '</div>';
+      }).join('');
+  }
+
+  // Apply button state
+  var applyBtn = document.getElementById('jdoApplyBtn');
+  if (ArtState.hasApplied(j.id)) {
+    applyBtn.textContent = 'Applied ✓';
+    applyBtn.style.background = '#1A7A3C';
+    applyBtn.style.cursor = 'default';
+    applyBtn.onclick = null;
+  } else {
+    applyBtn.textContent = 'Apply with Portfolio →';
+    applyBtn.style.background = '';
+    applyBtn.style.cursor = '';
+    applyBtn.onclick = function() {
+      ArtState.applyToJob(j.id, j.title);
+      this.textContent = 'Applied ✓';
+      this.style.background = '#1A7A3C';
+      this.style.cursor = 'default';
+      this.onclick = null;
+      showToast('Application sent with your portfolio!');
+      // Update side panel too
+      renderDetail(j);
+    };
+  }
+
+  document.getElementById('jdOverlay').style.display = 'flex';
+}
+
+function closeJobDetail() {
+  document.getElementById('jdOverlay').style.display = 'none';
+  _jdoJob = null;
+}
+
 // Marquee
 const MQ=[
   {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#E8001A', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
   {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#FF5F1F', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
 ];
 const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
 document.getElementById('marqTrack').innerHTML=ch+ch;
 function goTo(p){window.location.href=p;}
+
+/* ── Post Job Modal ── */
+let selectedJobType = 'full-time';
+
+function openPostJobModal() {
+  document.getElementById('pjFormContent').style.display = '';
+  document.getElementById('pjFooter').style.display = '';
+  document.getElementById('pjReviewing').style.display = 'none';
+  document.getElementById('pjFlagged').style.display = 'none';
+  document.getElementById('postJobModal').style.display = 'flex';
+}
+
+function closePostJobModal() {
+  document.getElementById('postJobModal').style.display = 'none';
+  // Reset form
+  document.getElementById('pjTitle').value = '';
+  document.getElementById('pjCompany').value = '';
+  document.getElementById('pjWebsite').value = '';
+  document.getElementById('pjLocation').value = '';
+  document.getElementById('pjPay').value = '';
+  document.getElementById('pjDesc').value = '';
+  document.getElementById('pjTags').value = '';
+  document.querySelectorAll('.pj-type-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelector('.pj-type-btn[data-type="full-time"]').classList.add('active');
+  selectedJobType = 'full-time';
+}
+
+function selectJobType(btn) {
+  document.querySelectorAll('.pj-type-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  selectedJobType = btn.dataset.type;
+}
+
+function submitJobPost() {
+  var title = document.getElementById('pjTitle').value.trim();
+  var company = document.getElementById('pjCompany').value.trim();
+  var desc = document.getElementById('pjDesc').value.trim();
+
+  if (!title || !company || !desc) {
+    if (!title) document.getElementById('pjTitle').style.borderColor = '#E8001A';
+    if (!company) document.getElementById('pjCompany').style.borderColor = '#E8001A';
+    if (!desc) document.getElementById('pjDesc').style.borderColor = '#E8001A';
+    showToast('Please fill in required fields');
+    return;
+  }
+
+  // Show reviewing state
+  document.getElementById('pjFormContent').style.display = 'none';
+  document.getElementById('pjFooter').style.display = 'none';
+  document.getElementById('pjReviewing').style.display = 'flex';
+
+  // Simulate AI review
+  setTimeout(function() {
+    var flagWords = ['scam','mlm','pyramid','xxx','gambling','crypto pump','get rich','nigerian prince','wire transfer'];
+    var combined = (title + ' ' + desc + ' ' + company).toLowerCase();
+    var isFlagged = flagWords.some(function(w) { return combined.indexOf(w) !== -1; });
+
+    if (isFlagged) {
+      document.getElementById('pjReviewing').style.display = 'none';
+      document.getElementById('pjFlagged').style.display = 'flex';
+    } else {
+      var website = document.getElementById('pjWebsite').value.trim();
+      var location = document.getElementById('pjLocation').value.trim() || 'Remote';
+      var pay = document.getElementById('pjPay').value.trim() || 'Negotiable';
+      var tagsRaw = document.getElementById('pjTags').value.trim();
+
+      var tagColors = [
+        {bg:'#FFB3C6',tc:'#0a0a0a'}, {bg:'#1B4FE8',tc:'#fff'}, {bg:'#1A7A3C',tc:'#fff'},
+        {bg:'#FF5F1F',tc:'#fff'}, {bg:'#f5f5f5',tc:'#666'}
+      ];
+      var tags = tagsRaw ? tagsRaw.split(',').map(function(t, i) {
+        return { t: t.trim(), bg: tagColors[i % tagColors.length].bg, tc: tagColors[i % tagColors.length].tc };
+      }).filter(function(t) { return t.t; }) : [{t:'General',bg:'#f5f5f5',tc:'#666'}];
+
+      var logos = ['🏢','⬡','◎','✦','🌐','🔷','🟡','🎯','💼','🧩','🌿','⚡','🎨','🔶'];
+      var newJob = {
+        id: JOBS.length,
+        logo: logos[Math.floor(Math.random() * logos.length)],
+        co: company,
+        loc: location,
+        type: selectedJobType,
+        isnew: true,
+        title: title,
+        pay: pay,
+        tags: tags,
+        desc: desc,
+        skills: [],
+        candidates: []
+      };
+
+      JOBS.unshift(newJob);
+      ArtState.addPostedJob(newJob);
+      visibleJobs = JOBS.slice();
+      activeId = newJob.id;
+      renderList();
+      renderDetail(newJob);
+
+      closePostJobModal();
+      showToast('Job posted successfully! \u2713');
+    }
+  }, 2400);
+}
+
+// Load user-posted jobs from localStorage on page load
+(function loadPostedJobs() {
+  var posted = ArtState.getPostedJobs();
+  posted.forEach(function(j) {
+    if (!JOBS.some(function(existing) { return existing.title === j.title && existing.co === j.co; })) {
+      j.id = JOBS.length;
+      JOBS.push(j);
+    }
+  });
+  if (posted.length) {
+    visibleJobs = JOBS.slice();
+    renderList();
+    renderDetail(JOBS[0]);
+  }
+})();
+
+// Escape key closes modal
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closePostJobModal(); closeJobDetail(); }
+});
 </script>
 </body>
 </html>

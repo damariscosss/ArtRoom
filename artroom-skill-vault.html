@@ -6,6 +6,8 @@
 <title>ArtRoom — Skill Vault</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="state.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+<script src="solana.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--nav-h:56px;--bar-h:50px}
@@ -124,6 +126,60 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
 .sb-btn{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:13px 26px;border-radius:100px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:#fff;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
 .sb-btn:hover{background:#fff;color:#0a0a0a}
 
+/* ── SELL SKILL MODAL ── */
+.ssm-bg{display:none;position:fixed;inset:0;z-index:800;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.ssm-box{background:#fff;border:1px solid #e5e5e5;border-radius:10px;width:540px;max-width:92vw;max-height:88vh;box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:flex;flex-direction:column}
+.ssm-head{padding:20px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ssm-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.ssm-close{width:32px;height:32px;border:1px solid #e5e5e5;border-radius:50%;background:none;cursor:pointer;font-size:14px;transition:background .15s}
+.ssm-close:hover{background:#f0f0f0}
+.ssm-body{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.ssm-label{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:4px;display:block}
+.ssm-inp{width:100%;border:1px solid #e5e5e5;border-radius:6px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s}
+.ssm-inp:focus{border-color:var(--black)}
+.ssm-textarea{width:100%;border:1px solid #e5e5e5;border-radius:6px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:vertical;min-height:60px;transition:border-color .2s}
+.ssm-textarea:focus{border-color:var(--black)}
+.ssm-cat-row{display:flex;gap:6px;flex-wrap:wrap}
+.ssm-cat-btn{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px;border-radius:100px;border:1.5px solid var(--border);background:#fff;color:var(--gray);cursor:pointer;transition:all .15s}
+.ssm-cat-btn:hover{border-color:var(--black);color:var(--black)}
+.ssm-cat-btn.active{background:var(--black);color:#fff;border-color:var(--black)}
+.ssm-foot{padding:16px 24px;border-top:1px solid #e5e5e5;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.ssm-earn{font-size:11px;color:var(--gray)}
+.ssm-earn strong{color:#1A7A3C}
+.ssm-foot-btns{display:flex;gap:10px}
+.ssm-cancel{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;padding:9px 18px;border-radius:100px;border:1.5px solid var(--border);background:#fff;color:var(--black);cursor:pointer;transition:border-color .2s}
+.ssm-cancel:hover{border-color:var(--black)}
+.ssm-submit{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;padding:9px 18px;border-radius:100px;border:none;background:var(--black);color:#fff;cursor:pointer;transition:opacity .2s}
+.ssm-submit:hover{opacity:.85}
+
+/* ── SKILL DETAIL OVERLAY ── */
+.sdo-bg{display:none;position:fixed;inset:0;z-index:700;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.sdo-box{background:#fff;border:1px solid #e5e5e5;border-radius:12px;width:600px;max-width:92vw;max-height:85vh;box-shadow:0 20px 60px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column}
+.sdo-head{padding:22px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:flex-start;gap:16px;flex-shrink:0}
+.sdo-head-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid var(--border)}
+.sdo-head-info{flex:1}
+.sdo-head-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:3px}
+.sdo-head-creator{font-size:12px;color:var(--gray)}
+.sdo-head-price{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;flex-shrink:0}
+.sdo-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border:1px solid #e5e5e5;border-radius:50%;background:none;cursor:pointer;font-size:14px;transition:background .15s}
+.sdo-close:hover{background:#f0f0f0}
+.sdo-body{padding:24px;overflow-y:auto;flex:1}
+.sdo-section{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#bbb;margin-bottom:10px;margin-top:22px;display:flex;align-items:center;gap:10px}
+.sdo-section:first-child{margin-top:0}
+.sdo-section::after{content:'';flex:1;height:1px;background:#f0f0f0}
+.sdo-desc{font-size:13px;font-weight:300;line-height:1.8;color:#444;margin-bottom:8px}
+.sdo-caps{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.sdo-cap{font-family:'DM Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;background:#f5f5f5;border:1px solid var(--border);color:#555}
+.sdo-ss-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.sdo-ss{border-radius:8px;border:1px solid var(--border);overflow:hidden;height:100px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray)}
+.sdo-stats-row{display:flex;gap:24px;margin-bottom:16px}
+.sdo-stat{text-align:center}
+.sdo-stat-n{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;display:block}
+.sdo-stat-l{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--gray)}
+.sdo-foot{padding:16px 24px;border-top:1px solid #e5e5e5;display:flex;gap:10px;flex-shrink:0}
+.sdo-install-btn{flex:1;padding:14px;background:var(--black);color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border:none;border-radius:100px;cursor:pointer;transition:background .2s}
+.sdo-install-btn:hover{background:#333}
+
 /* Bottom bar */
 
 /* ══════════════════════════════
@@ -198,6 +254,7 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
   </div>
   <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
   <div class="nav-right">
+    <button class="wallet-btn" id="walletConnectBtn" onclick="ArtWallet.isConnected()?ArtWallet.disconnect():ArtWallet.connect()">&#x25CE; Connect</button>
     <div class="sign-wrap">
       <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
       <div class="sign-board" onclick="goTo('artroom-studio.html')">
@@ -300,7 +357,7 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
       <div class="sb-title">Sell your expertise as a Skill</div>
       <p class="sb-sub">Package your design methodology, brand principles, or creative process and sell it to thousands of designers who want to level up their AI. Earn 85% of every sale.</p>
     </div>
-    <button class="sb-btn" onclick="goTo('artroom-create.html')">Start Selling Skills →</button>
+    <button class="sb-btn" onclick="openSellSkillModal()">Start Selling Skills →</button>
   </div>
 
 </div>
@@ -414,7 +471,11 @@ SKILLS.forEach((s, i) => {
         <button class="sk-install" onclick="event.stopPropagation();openPay('${s.name}','${s.price}','${s.creator.split(".")[0]}')">Install →</button>
       </div>
     </div>`;
-  el.addEventListener('click', () => openPay(s.name, s.price, s.creator));
+  el.addEventListener('click', function(e) {
+    // If install button was clicked, let it handle payment; otherwise open detail
+    if (e.target.closest('.sk-install')) return;
+    openSkillDetail(s);
+  });
   sg.appendChild(el);
   setTimeout(() => el.classList.add('vis'), i * 60 + 100);
 });
@@ -480,14 +541,16 @@ function submitPay(){
   document.getElementById('paySuccess').style.display='block';
   document.getElementById('paySuccessItem').textContent=_payItem;
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closePay();});
+/* keydown handled at end of file */
 
 const MQ=[
   {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#E8001A', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
   {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#FF5F1F', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
 ];
 const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
@@ -552,6 +615,74 @@ function goTo(p){window.location.href=p;}
   </div>
 </div>
 
+<!-- SELL SKILL MODAL -->
+<div class="ssm-bg" id="sellSkillModal" onclick="if(event.target===this)closeSellSkillModal()">
+  <div class="ssm-box">
+    <div class="ssm-head">
+      <span class="ssm-title">Publish a Skill</span>
+      <button class="ssm-close" onclick="closeSellSkillModal()">&#x2715;</button>
+    </div>
+    <div class="ssm-body">
+      <div>
+        <span class="ssm-label">Skill Name *</span>
+        <input class="ssm-inp" id="ssmTitle" placeholder="e.g. Brand Identity Studio System">
+      </div>
+      <div>
+        <span class="ssm-label">Description</span>
+        <textarea class="ssm-textarea" id="ssmDesc" placeholder="What does this skill teach Claude? Who is it for?" rows="3"></textarea>
+      </div>
+      <div>
+        <span class="ssm-label">Capabilities (comma separated)</span>
+        <input class="ssm-inp" id="ssmCaps" placeholder="e.g. Logo rationale, Color theory, Brand voice">
+      </div>
+      <div>
+        <span class="ssm-label">Category</span>
+        <div class="ssm-cat-row">
+          <button class="ssm-cat-btn" data-cat="brand" onclick="selSsmCat(this)">Branding</button>
+          <button class="ssm-cat-btn" data-cat="ui" onclick="selSsmCat(this)">UI / UX</button>
+          <button class="ssm-cat-btn" data-cat="type" onclick="selSsmCat(this)">Typography</button>
+          <button class="ssm-cat-btn" data-cat="illus" onclick="selSsmCat(this)">Illustration</button>
+          <button class="ssm-cat-btn" data-cat="motion" onclick="selSsmCat(this)">Motion</button>
+          <button class="ssm-cat-btn" data-cat="critique" onclick="selSsmCat(this)">Critique</button>
+        </div>
+      </div>
+      <div>
+        <span class="ssm-label">Price ($)</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#bbb">$</span>
+          <input class="ssm-inp" id="ssmPrice" type="number" min="1" value="49" placeholder="49" style="width:120px" oninput="updateSsmEarn()">
+        </div>
+      </div>
+    </div>
+    <div class="ssm-foot">
+      <span class="ssm-earn">You earn <strong id="ssmEarnAmt">$41.65</strong> (85%)</span>
+      <div class="ssm-foot-btns">
+        <button class="ssm-cancel" onclick="closeSellSkillModal()">Cancel</button>
+        <button class="ssm-submit" onclick="publishSellSkill()">Publish Skill &#x2192;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SKILL DETAIL OVERLAY -->
+<div class="sdo-bg" id="skillDetailOverlay" onclick="if(event.target===this)closeSkillDetail()">
+  <div class="sdo-box" style="position:relative">
+    <div class="sdo-head">
+      <div class="sdo-head-icon" id="sdoIcon"></div>
+      <div class="sdo-head-info">
+        <div class="sdo-head-name" id="sdoName"></div>
+        <div class="sdo-head-creator" id="sdoCreator"></div>
+      </div>
+      <div class="sdo-head-price" id="sdoPrice"></div>
+    </div>
+    <button class="sdo-close" onclick="closeSkillDetail()">&#x2715;</button>
+    <div class="sdo-body" id="sdoBody"></div>
+    <div class="sdo-foot">
+      <button class="sdo-install-btn" id="sdoInstallBtn">Install →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* Skill Vault purchase → install persistence */
 const _origSubmitPay = submitPay;
@@ -579,6 +710,223 @@ document.querySelectorAll('.sk-card').forEach(card => {
     const btn = card.querySelector('.sk-install');
     if (btn) { btn.textContent = 'Installed ✓'; btn.style.background = '#1A7A3C'; btn.style.opacity = '1'; btn.style.transform = 'none'; }
   }
+});
+
+/* ── Sell Skill Modal ── */
+let ssmSelectedCat = 'brand';
+
+function openSellSkillModal() {
+  document.getElementById('sellSkillModal').style.display = 'flex';
+  updateSsmEarn();
+}
+
+function closeSellSkillModal() {
+  document.getElementById('sellSkillModal').style.display = 'none';
+  document.getElementById('ssmTitle').value = '';
+  document.getElementById('ssmDesc').value = '';
+  document.getElementById('ssmCaps').value = '';
+  document.getElementById('ssmPrice').value = '49';
+  document.querySelectorAll('.ssm-cat-btn').forEach(b => b.classList.remove('active'));
+  ssmSelectedCat = 'brand';
+  updateSsmEarn();
+}
+
+function selSsmCat(btn) {
+  document.querySelectorAll('.ssm-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ssmSelectedCat = btn.dataset.cat;
+}
+
+function updateSsmEarn() {
+  var price = parseFloat(document.getElementById('ssmPrice').value) || 0;
+  document.getElementById('ssmEarnAmt').textContent = '$' + (price * 0.85).toFixed(2);
+}
+
+function publishSellSkill() {
+  var title = document.getElementById('ssmTitle').value.trim();
+  if (!title) {
+    document.getElementById('ssmTitle').style.borderColor = '#E8001A';
+    document.getElementById('ssmTitle').focus();
+    return;
+  }
+
+  var desc = document.getElementById('ssmDesc').value.trim() || 'A custom skill published by a creator.';
+  var capsRaw = document.getElementById('ssmCaps').value.trim();
+  var caps = capsRaw ? capsRaw.split(',').map(function(c){ return c.trim(); }).filter(Boolean) : ['Custom skill'];
+  var price = '$' + (document.getElementById('ssmPrice').value || '49');
+
+  var catIcons = { brand:'🎨', ui:'⬡', type:'T', illus:'◎', motion:'◈', critique:'✦' };
+  var catBgs = { brand:'#FFB3C6', ui:'#1B4FE8', type:'#FFE500', illus:'#FF5F1F', motion:'#1A7A3C', critique:'#0a0a0a' };
+  var catTcs = { brand:'#0a0a0a', ui:'#fff', type:'#0a0a0a', illus:'#fff', motion:'#fff', critique:'#fff' };
+
+  var newSkill = {
+    tag: ssmSelectedCat,
+    icon: catIcons[ssmSelectedCat] || '✦',
+    iconBg: catBgs[ssmSelectedCat] || '#0a0a0a',
+    iconTc: catTcs[ssmSelectedCat] || '#fff',
+    name: title,
+    creator: 'you.artroom',
+    price: price,
+    level: 1,
+    desc: desc,
+    caps: caps,
+    installs: '0',
+    rating: 'New'
+  };
+
+  // Add to SKILLS array
+  SKILLS.unshift(newSkill);
+
+  // Persist
+  ArtState.installSkill({ name: title, price: price, by: 'you', category: ssmSelectedCat });
+
+  // Add card to grid
+  var el = document.createElement('div');
+  el.className = 'sk-card vis';
+  el.dataset.tag = newSkill.tag;
+  el.innerHTML = '<div class="sk-head">' +
+    '<div class="sk-icon" style="background:' + newSkill.iconBg + ';color:' + newSkill.iconTc + '">' + newSkill.icon + '</div>' +
+    '<div class="sk-header-info"><div class="sk-name">' + newSkill.name + '</div><div class="sk-creator">' + newSkill.creator + '</div></div>' +
+    '<div class="sk-price">' + newSkill.price + '</div></div>' +
+    '<div class="sk-body"><p class="sk-desc">' + newSkill.desc + '</p>' +
+    '<div class="sk-caps">' + newSkill.caps.map(function(c){ return '<span class="sk-cap">' + c + '</span>'; }).join('') + '</div>' +
+    '<div class="sk-footer"><div class="sk-stats">' +
+    '<span class="sk-stat">⬇ 0</span><span class="sk-stat">★ New</span>' +
+    '<span class="level-badge level-1">Beginner</span></div>' +
+    '<button class="sk-install" style="opacity:1;transform:none;background:#1A7A3C" onclick="event.stopPropagation()">Published ✓</button></div></div>';
+  el.addEventListener('click', function(e) {
+    if (e.target.closest('.sk-install')) return;
+    openSkillDetail(newSkill);
+  });
+  sg.insertBefore(el, sg.firstChild);
+
+  closeSellSkillModal();
+  showToast('Skill "' + title + '" published to the Vault ✓');
+}
+
+/* ── Skill Detail Overlay ── */
+var _sdoSkill = null;
+
+var SKILL_SCREENSHOTS = {
+  "Maya's Brand Method": [
+    {bg:'#FFB3C6',label:'Brand system output'},
+    {bg:'#f5e6e9',label:'Color palette builder'},
+    {bg:'#ffe0eb',label:'Logo rationale prompt'},
+    {bg:'#f0c0d0',label:'Identity scalability'}
+  ],
+  "James UI Systems": [
+    {bg:'#1B4FE8',label:'Component architecture'},
+    {bg:'#d0dcff',label:'Spacing token setup'},
+    {bg:'#e0e8ff',label:'Dark mode tokens'},
+    {bg:'#c0d0ff',label:'Accessibility checker'}
+  ],
+  "Theo's Type Principles": [
+    {bg:'#FFE500',label:'Font pairing example'},
+    {bg:'#fff8cc',label:'Type scale analysis'},
+    {bg:'#f5edb0',label:'Hierarchy critique'},
+    {bg:'#e8d88c',label:'Optical sizing demo'}
+  ],
+  "Kai's Illustration Voice": [
+    {bg:'#FF5F1F',label:'Composition critique'},
+    {bg:'#ffe0d0',label:'Visual narrative flow'},
+    {bg:'#ffd0b8',label:'Style direction'},
+    {bg:'#ffc0a0',label:'Color mood analysis'}
+  ],
+  "Rin's Motion Grammar": [
+    {bg:'#1A7A3C',label:'Easing curve spec'},
+    {bg:'#d0f0d8',label:'Timing logic output'},
+    {bg:'#b8e8c0',label:'Transition choreography'},
+    {bg:'#a0d8a8',label:'Animation critique'}
+  ],
+  "ArtRoom Design Eye": [
+    {bg:'#0a0a0a',label:'Critique framework'},
+    {bg:'#333',label:'Feedback structure'},
+    {bg:'#555',label:'Iteration notes'},
+    {bg:'#888',label:'Red-lining guide'}
+  ]
+};
+
+function openSkillDetail(s) {
+  _sdoSkill = s;
+  var icon = document.getElementById('sdoIcon');
+  icon.style.background = s.iconBg;
+  icon.style.color = s.iconTc;
+  icon.textContent = s.icon;
+  document.getElementById('sdoName').textContent = s.name;
+  document.getElementById('sdoCreator').textContent = s.creator;
+  document.getElementById('sdoPrice').textContent = s.price;
+
+  var body = document.getElementById('sdoBody');
+  var html = '';
+
+  // Stats row
+  html += '<div class="sdo-stats-row">' +
+    '<div class="sdo-stat"><span class="sdo-stat-n">' + (s.installs || '0') + '</span><span class="sdo-stat-l">Installs</span></div>' +
+    '<div class="sdo-stat"><span class="sdo-stat-n">' + (s.rating || '-') + '</span><span class="sdo-stat-l">Rating</span></div>' +
+    '<div class="sdo-stat"><span class="sdo-stat-n">' + (LEVEL_LABELS[s.level] || 'Beginner') + '</span><span class="sdo-stat-l">Level</span></div>' +
+  '</div>';
+
+  // Description
+  html += '<div class="sdo-section">About this Skill</div>' +
+    '<p class="sdo-desc">' + s.desc + '</p>';
+
+  // Capabilities
+  html += '<div class="sdo-section">What it teaches Claude</div>' +
+    '<div class="sdo-caps">' + s.caps.map(function(c){ return '<span class="sdo-cap">' + c + '</span>'; }).join('') + '</div>';
+
+  // Screenshots / examples
+  var screenshots = SKILL_SCREENSHOTS[s.name] || [
+    {bg:s.iconBg,label:'AI skill demo output'},
+    {bg:'#f5f5f5',label:'Example prompt result'},
+    {bg:'#eee',label:'Critique sample'},
+    {bg:'#ddd',label:'Workflow preview'}
+  ];
+  html += '<div class="sdo-section">Examples & Screenshots</div>' +
+    '<div class="sdo-ss-grid">' + screenshots.map(function(ss) {
+      return '<div class="sdo-ss" style="background:' + ss.bg + ';color:' + (ss.bg === '#0a0a0a' || ss.bg === '#333' || ss.bg === '#555' ? '#fff' : '#666') + '">' + ss.label + '</div>';
+    }).join('') + '</div>';
+
+  // Creator info
+  html += '<div class="sdo-section">Creator</div>' +
+    '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:8px;cursor:pointer" onclick="goTo(\'artroom-artist.html?handle=' + (s.creator || '').split('.')[0] + '\')">' +
+    '<div style="width:36px;height:36px;border-radius:50%;background:' + s.iconBg + ';color:' + s.iconTc + ';font-family:Syne,sans-serif;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center">' + (s.creator || '?').charAt(0).toUpperCase() + '</div>' +
+    '<div><div style="font-size:13px;font-weight:500">' + (s.creator || '') + '</div><div style="font-size:10px;color:var(--gray)">View portfolio →</div></div></div>';
+
+  body.innerHTML = html;
+
+  // Install button state
+  var installBtn = document.getElementById('sdoInstallBtn');
+  if (ArtState.hasSkill(s.name)) {
+    installBtn.textContent = 'Installed ✓';
+    installBtn.style.background = '#1A7A3C';
+    installBtn.style.cursor = 'default';
+    installBtn.onclick = null;
+  } else {
+    installBtn.textContent = 'Install ' + s.price + ' →';
+    installBtn.style.background = '';
+    installBtn.style.cursor = '';
+    installBtn.onclick = function() { closeSkillDetail(); openPay(s.name, s.price, s.creator); };
+  }
+
+  document.getElementById('skillDetailOverlay').style.display = 'flex';
+}
+
+function closeSkillDetail() {
+  document.getElementById('skillDetailOverlay').style.display = 'none';
+  _sdoSkill = null;
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2600);
+}
+
+/* Escape key handler */
+var _origKeyHandler = document.onkeydown;
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeSellSkillModal(); closeSkillDetail(); closePay(); }
 });
 </script>
 </body>

@@ -6,6 +6,8 @@
 <title>ArtRoom — Gallery</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <script src="state.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+<script src="solana.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--black:#0a0a0a;--border:#e8e8e8;--gray:#999;--nav-h:56px;--bar-h:50px}
@@ -168,6 +170,7 @@ body{background:#fff;color:var(--black);font-family:'DM Sans',sans-serif;overflo
   </div>
   <div style="text-align:center"><span class="nav-logo" onclick="window.location.href='artroom-home.html'">ArtRoom</span></div>
   <div class="nav-right">
+    <button class="wallet-btn" id="walletConnectBtn" onclick="ArtWallet.isConnected()?ArtWallet.disconnect():ArtWallet.connect()">&#x25CE; Connect</button>
     <div class="sign-wrap">
       <div class="sign-chain"><div class="chain-link"></div><div class="chain-link"></div><div class="chain-link"></div></div>
       <div class="sign-board" onclick="goTo('artroom-studio.html')">
@@ -333,9 +336,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closePay();});
 const MQ=[
   {txt:'Gallery',    bg:'#FFE500', tc:'#0a0a0a', p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#1B4FE8', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#E8001A', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#1A7A3C', tc:'#fff',    p:'artroom-create.html'},
   {txt:'Gallery',    bg:'#7B3FA0', tc:'#fff',    p:'artroom-gallery.html'},
   {txt:'Skill Vault',bg:'#FF5F1F', tc:'#fff',    p:'artroom-skill-vault.html'},
+  {txt:'Messages',   bg:'#FF5F1F', tc:'#fff',    p:'artroom-studio.html?view=messages'},
   {txt:'Create',     bg:'#FFB3C6', tc:'#0a0a0a', p:'artroom-create.html'},
 ];
 const ch=MQ.map(m=>`<div class="mq-item"><button class="mq-btn" style="background:${m.bg};color:${m.tc}" onclick="goTo('${m.p}')">${m.txt}</button><span class="mq-dot">·</span></div>`).join('');
